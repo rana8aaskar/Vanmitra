@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm rebuild:*)",
+      "Bash(rm:*)",
+      "Bash(lsof:*)",
+      "Bash(awk:*)",
+      "Bash(xargs -r kill -9)",
+      "Bash(touch:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)",
+      "Bash(cat:*)",
+      "Read(//mnt/c/Users/harsh/OneDrive/Desktop/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

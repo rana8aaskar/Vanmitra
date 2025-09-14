@@ -1,0 +1,14 @@
+# Core dependencies
+easyocr
+pandas
+Pillow
+opencv-python
+numpy
+
+# For OCR processing
+torch
+torchvision
+
+# For NLP - install spacy separately
+# spacy
+# After installing, run: python -m spacy download en_core_web_sm
