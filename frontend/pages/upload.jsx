@@ -1,9 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Head from 'next/head'
+import Navbar from '../components/Navbar'
+import FileUpload from '../components/FileUpload'
 import { toast } from 'react-toastify'
 import api from '../services/api'
 import Cookies from 'js-cookie'
 
-export default function Navbar({ user, setUser }) {
+export default function Upload() {
+  const [user, setUser] = useState(null)
+  const [uploadedDoc, setUploadedDoc] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [formData, setFormData] = useState({
@@ -11,6 +17,47 @@ export default function Navbar({ user, setUser }) {
     email: '',
     password: ''
   })
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = Cookies.get('token')
+    if (token) {
+      api.setAuthToken(token)
+      fetchUser()
+    } else {
+      // Show login modal instead of redirecting
+      setShowLoginModal(true)
+    }
+  }, [])
+
+  const fetchUser = async () => {
+    try {
+      const userData = await api.getMe()
+      setUser(userData.user)
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      // Show login modal if authentication fails
+      setShowLoginModal(true)
+    }
+  }
+
+  const handleUpload = async (file) => {
+    setLoading(true)
+    try {
+      const result = await api.uploadDoc(file)
+      setUploadedDoc(result.document)
+      toast.success('Document uploaded and processed successfully!')
+
+      // Show processing status
+      if (!result.processing.success) {
+        toast.warning('Document saved but processing failed. You can reprocess later.')
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Upload failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -49,75 +96,132 @@ export default function Navbar({ user, setUser }) {
     }
   }
 
-  const handleLogout = () => {
-    Cookies.remove('token')
-    api.setAuthToken(null)
-    setUser(null)
-    toast.success('Logged out successfully')
-  }
-
   return (
-    <>
-      <nav className="bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <a href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Vanmitra
-              </a>
-              <div className="ml-10 space-x-6 hidden md:flex">
-                <a href="/" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200">
-                  Home
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <Head>
+        <title>Upload Document - Vanmitra</title>
+        <meta name="description" content="Upload and process your documents with AI" />
+      </Head>
+
+      <Navbar user={user} setUser={setUser} />
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Upload Your Document
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Upload your documents and let our AI automatically extract and organize the information for you.
+            </p>
+          </div>
+
+          {/* Upload Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8">
+            <FileUpload onUpload={handleUpload} loading={loading} />
+          </div>
+
+          {/* Results Section */}
+          {uploadedDoc && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Document Processed Successfully</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Claimant Name</label>
+                    <p className="text-lg text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {uploadedDoc.claimant_name || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
+                    <p className="text-lg text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {uploadedDoc.district || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <p className="text-lg text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {uploadedDoc.state || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                      uploadedDoc.claim_status === 'approved' 
+                        ? 'bg-green-100 text-green-800' 
+                        : uploadedDoc.claim_status === 'rejected'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {uploadedDoc.claim_status || 'Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/dashboard"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-center"
+                >
+                  View All Documents
                 </a>
-                <a href="/upload" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200">
-                  Upload
-                </a>
-                <a href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200">
-                  Dashboard
-                </a>
+                <button
+                  onClick={() => {
+                    setUploadedDoc(null)
+                    // Reset the file input
+                    const fileInput = document.querySelector('input[type="file"]')
+                    if (fileInput) fileInput.value = ''
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
+                >
+                  Upload Another Document
+                </button>
               </div>
             </div>
+          )}
 
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <div className="hidden sm:flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">
-                        {(user.name || user.email).charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-gray-700 font-medium">Welcome, {user.name || user.email}</span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    data-login-trigger
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => setShowRegisterModal(true)}
-                    data-register-trigger
-                    className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-full hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
+          {/* How it Works Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">1</span>
+                </div>
+                <h4 className="text-lg font-semibold mb-2">Upload Document</h4>
+                <p className="text-gray-600">Upload your document in PDF, JPG, or PNG format</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">2</span>
+                </div>
+                <h4 className="text-lg font-semibold mb-2">AI Processing</h4>
+                <p className="text-gray-600">Our AI automatically extracts and structures the data</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">3</span>
+                </div>
+                <h4 className="text-lg font-semibold mb-2">Review & Manage</h4>
+                <p className="text-gray-600">Review the extracted data and manage in your dashboard</p>
+              </div>
             </div>
           </div>
         </div>
-      </nav>
+      </main>
 
       {/* Login Modal */}
       {showLoginModal && (
@@ -129,8 +233,8 @@ export default function Navbar({ user, setUser }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-gray-600">Sign in to your account</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Access Upload</h2>
+              <p className="text-gray-600">Sign in to upload your documents</p>
             </div>
             <form onSubmit={handleLogin}>
               <div className="mb-6">
@@ -160,10 +264,10 @@ export default function Navbar({ user, setUser }) {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   type="button"
-                  onClick={() => setShowLoginModal(false)}
+                  onClick={() => window.location.href = '/'}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
                 >
-                  Cancel
+                  Go to Home
                 </button>
                 <button
                   type="submit"
@@ -201,8 +305,8 @@ export default function Navbar({ user, setUser }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-              <p className="text-gray-600">Join Vanmitra today</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Vanmitra</h2>
+              <p className="text-gray-600">Create your account to start uploading</p>
             </div>
             <form onSubmit={handleRegister}>
               <div className="mb-6">
@@ -244,10 +348,10 @@ export default function Navbar({ user, setUser }) {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   type="button"
-                  onClick={() => setShowRegisterModal(false)}
+                  onClick={() => window.location.href = '/'}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
                 >
-                  Cancel
+                  Go to Home
                 </button>
                 <button
                   type="submit"
@@ -274,6 +378,6 @@ export default function Navbar({ user, setUser }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

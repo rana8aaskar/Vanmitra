@@ -5,11 +5,24 @@ require('dotenv').config();
 const connectionString = process.env.DATABASE_URL;
 
 console.log('Attempting to connect to database...');
+console.log('Database URL:', connectionString ? 'Set' : 'Not set');
 
-// Try connecting without SSL object, just true
+// Configure SSL based on environment and connection string
+let sslConfig = false;
+
+if (process.env.NODE_ENV === 'production') {
+  sslConfig = { rejectUnauthorized: false };
+} else if (connectionString && connectionString.includes('sslmode=require')) {
+  sslConfig = { rejectUnauthorized: false };
+} else {
+  sslConfig = false;
+}
+
+console.log('SSL Configuration:', sslConfig);
+
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: true
+  ssl: sslConfig
 });
 
 pool.on('error', (err) => {
