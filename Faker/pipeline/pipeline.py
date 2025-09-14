@@ -6,9 +6,9 @@ import pandas as pd
 import re
 
 # Paths for model and output
-MODEL_PATH = r"E:\sih\Faker\pipeline\model-best\content\model-best"
-OUTPUT_CSV = "fra_data.csv"
-IMAGE_PATH = "output_new.png"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model-best", "content", "model-best")
+OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "fra_data.csv")
+IMAGE_PATH = os.path.join(os.path.dirname(__file__), "output_new.png")
 
 # Load the trained NER model
 nlp = spacy.load(MODEL_PATH)
