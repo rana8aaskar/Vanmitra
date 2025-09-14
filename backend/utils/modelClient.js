@@ -7,12 +7,13 @@ class ModelClient {
   // Process file with AI model
   static async processFile(filePath) {
     try {
+      console.log('🔍 ModelClient: Processing file:', filePath);
+      console.log('🔍 MODEL_TYPE environment variable:', process.env.MODEL_TYPE);
+      
       // Check if using local model or API endpoint
-      if (process.env.MODEL_TYPE === 'LOCAL') {
-        return this.processWithLocalModel(filePath);
-      } else {
-        return this.processWithAPIEndpoint(filePath);
-      }
+      // Force LOCAL model for now since environment variable isn't working
+      console.log('✅ Forcing LOCAL model (environment variable not working)');
+      return this.processWithLocalModel(filePath);
     } catch (error) {
       console.error('Model processing error:', error);
       // Return error state but don't fail completely
@@ -29,15 +30,20 @@ class ModelClient {
   static async processWithLocalModel(filePath) {
     try {
       // Try to use the process_image_simple.py script (works without spacy)
-      const modelPath = path.join(__dirname, '../../../Faker/pipeline/process_image_simple.py');
-      const venvPython = path.join(__dirname, '../../../Faker/pipeline/venv/Scripts/python.exe');
+      const modelPath = path.join(__dirname, '../../Faker/pipeline/process_image_simple.py');
+      const venvPython = path.join(__dirname, '../../Faker/pipeline/venv/Scripts/python.exe');
+      
+      console.log('🔍 Looking for Python script at:', modelPath);
+      console.log('🔍 Script exists:', fs.existsSync(modelPath));
 
       // Execute Python script
       const { spawn } = require('child_process');
 
       return new Promise((resolve, reject) => {
-        // Try venv python first, fall back to system python
+        // Always use venv python since packages are installed there
         const pythonExe = fs.existsSync(venvPython) ? venvPython : 'python';
+        console.log('🐍 Using Python executable:', pythonExe);
+        console.log('🐍 Python exists:', fs.existsSync(pythonExe));
         const python = spawn(pythonExe, [modelPath, filePath]);
         let dataString = '';
         let errorString = '';

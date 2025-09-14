@@ -44,3 +44,67 @@ backend/uploads/*
 
 # Model folders
 Faker/pipeline/model-best/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+
+# Virtual environments
+Faker/pipeline/venv/
+Faker/pipeline/.venv/
+
+# Large files and datasets
+*.csv
+*.json
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.model
+*.weights
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Backup files
+*.bak
+*.backup
+*.old
