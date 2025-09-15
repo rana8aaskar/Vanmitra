@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Navbar from '../components/Navbar'
 import DocumentCard from '../components/DocumentCard'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FileText, CheckCircle, Clock, XCircle, MapPin, Building2,
+  Filter, Upload, Search, Trees, Droplets, TrendingUp,
+  Activity, BarChart3, Users, Calendar, Download,
+  RefreshCw, Grid, List, SortDesc
+} from 'lucide-react'
 import { toast } from 'react-toastify'
 import api from '../services/api'
 import Cookies from 'js-cookie'
@@ -16,6 +23,8 @@ export default function Dashboard() {
     claim_status: ''
   })
   const [statistics, setStatistics] = useState(null)
+  const [viewMode, setViewMode] = useState('grid')
+  const [searchQuery, setSearchQuery] = useState('')
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [formData, setFormData] = useState({
@@ -25,7 +34,6 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    // Check if user is logged in
     const token = Cookies.get('token')
     if (token) {
       api.setAuthToken(token)
@@ -33,7 +41,6 @@ export default function Dashboard() {
       fetchDocuments()
       fetchStatistics()
     } else {
-      // Show login modal instead of redirecting
       setShowLoginModal(true)
       setLoading(false)
     }
@@ -45,7 +52,6 @@ export default function Dashboard() {
       setUser(userData.user)
     } catch (error) {
       console.error('Failed to fetch user:', error)
-      // Show login modal if authentication fails
       setShowLoginModal(true)
     }
   }
@@ -108,7 +114,6 @@ export default function Dashboard() {
       setShowLoginModal(false)
       toast.success('Logged in successfully!')
       setFormData({ name: '', email: '', password: '' })
-      // Fetch data after successful login
       fetchDocuments()
       fetchStatistics()
     } catch (error) {
@@ -126,7 +131,6 @@ export default function Dashboard() {
       setShowRegisterModal(false)
       toast.success('Registered successfully!')
       setFormData({ name: '', email: '', password: '' })
-      // Fetch data after successful registration
       fetchDocuments()
       fetchStatistics()
     } catch (error) {
@@ -134,12 +138,71 @@ export default function Dashboard() {
     }
   }
 
-  // Show loading screen if still checking authentication
+  const statCards = [
+    {
+      label: 'Total Documents',
+      value: statistics?.total_documents || 0,
+      icon: FileText,
+      gradient: 'from-gray-500 to-gray-600',
+      bgGradient: 'from-gray-50 to-gray-100',
+      trend: '+12%',
+      trendUp: true
+    },
+    {
+      label: 'Approved',
+      value: statistics?.approved || 0,
+      icon: CheckCircle,
+      gradient: 'from-forest-500 to-forest-600',
+      bgGradient: 'from-forest-50 to-forest-100',
+      trend: '+8%',
+      trendUp: true
+    },
+    {
+      label: 'Pending Review',
+      value: statistics?.pending || 0,
+      icon: Clock,
+      gradient: 'from-yellow-500 to-amber-600',
+      bgGradient: 'from-yellow-50 to-amber-100',
+      trend: '-3%',
+      trendUp: false
+    },
+    {
+      label: 'Rejected',
+      value: statistics?.rejected || 0,
+      icon: XCircle,
+      gradient: 'from-red-500 to-red-600',
+      bgGradient: 'from-red-50 to-red-100',
+      trend: '-15%',
+      trendUp: false
+    },
+    {
+      label: 'States Covered',
+      value: statistics?.states_covered || 0,
+      icon: MapPin,
+      gradient: 'from-water-500 to-water-600',
+      bgGradient: 'from-water-50 to-water-100',
+      trend: '+2',
+      trendUp: true
+    },
+    {
+      label: 'Districts',
+      value: statistics?.districts_covered || 0,
+      icon: Building2,
+      gradient: 'from-forest-500 to-emerald-600',
+      bgGradient: 'from-forest-50 to-emerald-100',
+      trend: '+5',
+      trendUp: true
+    }
+  ]
+
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Trees className="w-6 h-6 text-forest-600 animate-pulse" />
+            <Droplets className="w-6 h-6 text-water-600 animate-pulse" />
+          </div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -147,370 +210,525 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <Head>
         <title>Dashboard - Vanmitra</title>
-        <meta name="description" content="View and manage your documents" />
+        <meta name="description" content="Manage your forest and water resources" />
       </Head>
 
       <Navbar user={user} setUser={setUser} />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Welcome to your Dashboard
-          </h1>
-          <p className="text-xl text-gray-600">
-            Manage and track your documents with ease
-          </p>
-        </div>
-
-        {/* Statistics */}
-        {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">Total Documents</div>
-                  <div className="text-3xl font-bold text-gray-900">{statistics.total_documents}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
+      <main className="pt-24 pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Enhanced Header with Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-forest-600 to-water-600 bg-clip-text text-transparent">
+                  Resource Dashboard
+                </h1>
+                <p className="text-gray-600 mt-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Last updated: {new Date().toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={fetchDocuments}
+                  className="px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </motion.button>
+                <motion.a
+                  href="/upload"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload New
+                </motion.a>
               </div>
             </div>
+          </motion.div>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">Approved</div>
-                  <div className="text-3xl font-bold text-green-600">{statistics.approved}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">Pending</div>
-                  <div className="text-3xl font-bold text-yellow-600">{statistics.pending}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">Rejected</div>
-                  <div className="text-3xl font-bold text-red-600">{statistics.rejected}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">States</div>
-                  <div className="text-3xl font-bold text-purple-600">{statistics.states_covered}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-600 font-medium">Districts</div>
-                  <div className="text-3xl font-bold text-indigo-600">{statistics.districts_covered}</div>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Filter Documents</h2>
-          <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-gray-700 mb-2 font-medium">State</label>
-              <input
-                type="text"
-                name="state"
-                placeholder="Enter state"
-                value={filters.state}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2 font-medium">District</label>
-              <input
-                type="text"
-                name="district"
-                placeholder="Enter district"
-                value={filters.district}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2 font-medium">Status</label>
-              <select
-                name="claim_status"
-                value={filters.claim_status}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="processing_error">Processing Error</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Documents List */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Documents</h2>
-            <a
-              href="/upload"
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-            >
-              Upload New Document
-            </a>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto"></div>
-              <p className="mt-6 text-gray-600 text-lg">Loading your documents...</p>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No documents found</h3>
-              <p className="text-gray-600 mb-6">Get started by uploading your first document</p>
-              <a
-                href="/upload"
-                className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-              >
-                Upload Your First Document
-              </a>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {documents.map(doc => (
-                <DocumentCard
-                  key={doc.id}
-                  document={doc}
-                  onUpdate={handleDocumentUpdate}
-                  canEdit={user && (user.role === 'admin' || user.id === doc.uploaded_by)}
-                />
+          {/* Enhanced Statistics Cards with Glass Morphism */}
+          {statistics && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+              {statCards.map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="relative overflow-hidden"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-50 rounded-2xl`} />
+                  <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`p-2 bg-gradient-to-br ${stat.gradient} rounded-lg`}>
+                        <stat.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className={`flex items-center gap-1 text-xs ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
+                        <TrendingUp className={`w-3 h-3 ${!stat.trendUp && 'rotate-180'}`} />
+                        {stat.trend}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-3xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                        {stat.value.toLocaleString()}
+                      </p>
+                      <p className="text-xs font-medium text-gray-600">{stat.label}</p>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
           )}
+
+          {/* Activity Timeline */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-water-50 to-forest-50 rounded-2xl p-6 mb-8 border border-white/50 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-water-500 to-water-600 rounded-lg">
+                  <Activity className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+              </div>
+              <span className="text-sm text-gray-500">Last 7 days</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-8">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-forest-600">24</p>
+                  <p className="text-xs text-gray-600">New Claims</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-water-600">18</p>
+                  <p className="text-xs text-gray-600">Processed</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-600">6</p>
+                  <p className="text-xs text-gray-600">Pending</p>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <BarChart3 className="w-32 h-16 text-gray-300" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Enhanced Filters with Glass Morphism */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="relative mb-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-forest-100/30 to-water-100/30 rounded-2xl blur-xl" />
+            <div className="relative bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/50 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg">
+                    <Filter className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Smart Filters</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-lg transition-all ${
+                      viewMode === 'grid'
+                        ? 'bg-gradient-to-br from-forest-500 to-forest-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Grid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-lg transition-all ${
+                      viewMode === 'list'
+                        ? 'bg-gradient-to-br from-forest-500 to-forest-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleFilterSubmit} className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search documents..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">State</label>
+                    <input
+                      type="text"
+                      name="state"
+                      placeholder="Enter state"
+                      value={filters.state}
+                      onChange={handleFilterChange}
+                      className="w-full px-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">District</label>
+                    <input
+                      type="text"
+                      name="district"
+                      placeholder="Enter district"
+                      value={filters.district}
+                      onChange={handleFilterChange}
+                      className="w-full px-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-water-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                    <select
+                      name="claim_status"
+                      value={filters.claim_status}
+                      onChange={handleFilterChange}
+                      className="w-full px-4 py-2.5 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent transition-all"
+                    >
+                      <option value="">All Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="processing_error">Processing Error</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <motion.button
+                      type="submit"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 px-4 py-2.5 bg-gradient-to-r from-forest-600 to-forest-700 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <Search className="w-4 h-4" />
+                      Apply
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setFilters({ state: '', district: '', claim_status: '' })
+                        setSearchQuery('')
+                      }}
+                      className="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+
+          {/* Enhanced Documents Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-forest-50/30 to-water-50/30 rounded-2xl blur-xl" />
+            <div className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-white/90 to-gray-50/90 border-b border-gray-200/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-forest-500 to-forest-600 rounded-lg">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Resource Documents</h2>
+                      <p className="text-xs text-gray-500">{documents.length} total documents</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 bg-white/50 rounded-lg hover:bg-white/80 transition-all">
+                      <SortDesc className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button className="p-2 bg-white/50 rounded-lg hover:bg-white/80 transition-all">
+                      <Download className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-16 text-center"
+                  >
+                    <div className="relative">
+                      <div className="animate-spin w-12 h-12 border-3 border-forest-600 border-t-transparent rounded-full mx-auto"></div>
+                      <div className="animate-spin w-12 h-12 border-3 border-water-600 border-t-transparent rounded-full mx-auto absolute inset-0 animate-reverse-spin"></div>
+                    </div>
+                    <p className="text-gray-600 mt-4">Loading documents...</p>
+                  </motion.div>
+                ) : documents.length === 0 ? (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-16 text-center"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No documents yet</h3>
+                    <p className="text-gray-600 mb-6">Start by uploading your first resource document</p>
+                    <motion.a
+                      href="/upload"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-forest-600 to-forest-700 text-white rounded-xl hover:shadow-lg transition-all"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload First Document
+                    </motion.a>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="documents"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`p-6 ${
+                      viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+                        : 'space-y-3'
+                    }`}
+                  >
+                    {documents.map((doc, index) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <DocumentCard
+                          document={doc}
+                          onUpdate={handleDocumentUpdate}
+                          canEdit={user && (user.role === 'admin' || user.id === doc.uploaded_by)}
+                          viewMode={viewMode}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
         </div>
       </main>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+      {/* Login Modal - Minimal */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl"
+            >
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-water-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Droplets className="w-6 h-6 text-water-600" />
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-900">Access Dashboard</h2>
+                <p className="text-sm text-gray-500 mt-1">Sign in to view your resources</p>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Access Dashboard</h2>
-              <p className="text-gray-600">Sign in to view your documents</p>
-            </div>
-            <form onSubmit={handleLogin}>
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-3 font-medium">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your email"
-                  required
-                />
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-water-500 focus:border-transparent"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-water-500 focus:border-transparent"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = '/'}
+                    className="flex-1 px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Go to Home
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 text-sm text-white bg-water-600 rounded-lg hover:bg-water-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </form>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-500">
+                  Don't have an account?{' '}
+                  <button
+                    onClick={() => {
+                      setShowLoginModal(false)
+                      setShowRegisterModal(true)
+                    }}
+                    className="text-forest-600 hover:text-forest-700 font-medium"
+                  >
+                    Sign up here
+                  </button>
+                </p>
               </div>
-              <div className="mb-8">
-                <label className="block text-gray-700 mb-3 font-medium">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  type="button"
-                  onClick={() => window.location.href = '/'}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
-                >
-                  Go to Home
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-                >
-                  Sign In
-                </button>
-              </div>
-            </form>
-            <div className="mt-6 text-center">
-              <p className="text-gray-600">
-                Don't have an account?{' '}
-                <button
-                  onClick={() => {
-                    setShowLoginModal(false)
-                    setShowRegisterModal(true)
-                  }}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Sign up here
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Register Modal */}
-      {showRegisterModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+      {/* Register Modal - Minimal */}
+      <AnimatePresence>
+        {showRegisterModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl"
+            >
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-forest-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trees className="w-6 h-6 text-forest-600" />
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-900">Join Vanmitra</h2>
+                <p className="text-sm text-gray-500 mt-1">Create your account</p>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Vanmitra</h2>
-              <p className="text-gray-600">Create your account to get started</p>
-            </div>
-            <form onSubmit={handleRegister}>
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-3 font-medium">Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your full name"
-                  required
-                />
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = '/'}
+                    className="flex-1 px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Go to Home
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 text-sm text-white bg-forest-600 rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Create Account
+                  </button>
+                </div>
+              </form>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-500">
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => {
+                      setShowRegisterModal(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="text-water-600 hover:text-water-700 font-medium"
+                  >
+                    Sign in here
+                  </button>
+                </p>
               </div>
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-3 font-medium">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-              <div className="mb-8">
-                <label className="block text-gray-700 mb-3 font-medium">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Create a password"
-                  required
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  type="button"
-                  onClick={() => window.location.href = '/'}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
-                >
-                  Go to Home
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-                >
-                  Create Account
-                </button>
-              </div>
-            </form>
-            <div className="mt-6 text-center">
-              <p className="text-gray-600">
-                Already have an account?{' '}
-                <button
-                  onClick={() => {
-                    setShowRegisterModal(false)
-                    setShowLoginModal(true)
-                  }}
-                  className="text-green-600 hover:text-green-700 font-medium"
-                >
-                  Sign in here
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

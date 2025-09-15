@@ -72,6 +72,10 @@ Faker/pipeline/.venv/
 *.model
 *.weights
 
+# Specific CSV file
+fra_data.csv
+Faker/pipeline/fra_data.csv
+
 # Logs
 *.log
 logs/
