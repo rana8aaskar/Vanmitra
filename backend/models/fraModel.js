@@ -13,6 +13,8 @@ class FRAModel {
     const fieldMapping = {
       claimant_name: data.claimant_name || '',
       spouse_name: data.spouse_name || '',
+      age: data.age || null,
+      gender: data.gender || '',
       patta_title_no: data.patta_title_no || '',
       aadhaar_no: data.aadhaar_no || '',
       category: data.category || '',
@@ -134,9 +136,10 @@ class FRAModel {
     const query = `
       SELECT
         COUNT(*) as total_documents,
-        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
-        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected,
+        COUNT(CASE WHEN LOWER(status_of_claim) = 'approved' THEN 1 END) as approved,
+        COUNT(CASE WHEN LOWER(status_of_claim) = 'pending' OR LOWER(status_of_claim) = 'under review' OR status_of_claim IS NULL THEN 1 END) as pending,
+        COUNT(CASE WHEN LOWER(status_of_claim) = 'rejected' THEN 1 END) as rejected,
+        COUNT(CASE WHEN LOWER(status_of_claim) = 'approved' OR LOWER(status_of_claim) = 'rejected' THEN 1 END) as processed,
         COUNT(DISTINCT state) as states_covered,
         COUNT(DISTINCT district) as districts_covered
       FROM claims

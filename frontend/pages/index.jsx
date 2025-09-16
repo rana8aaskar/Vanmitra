@@ -1,19 +1,51 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
-import Navbar from '../components/Navbar'
-import { motion } from 'framer-motion'
-import {
-  Trees, Droplets, Cloud, Shield, BarChart3, ArrowRight, Leaf,
-  Sparkles, CheckCircle, Users, Globe, Award, TrendingUp, Zap,
-  Mountain, Waves, Wind, LayoutDashboard
-} from 'lucide-react'
-import { toast } from 'react-toastify'
-import api from '../services/api'
+import Link from 'next/link'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { Trees, Droplets, Mountain, Building, Users, Globe, Award, ChevronRight, MapPin, Upload, BarChart3, Brain, Satellite, ScrollText, CheckCircle, ArrowRight, Menu, X, Shield, Target, TrendingUp, FileText, Activity, Layers, Navigation, Clock, User, LogOut, ChevronDown } from 'lucide-react'
+import CountUp from 'react-countup'
+import { useInView } from 'react-intersection-observer'
 import Cookies from 'js-cookie'
+import api from '../services/api'
+import { toast } from 'react-toastify'
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [activeStory, setActiveStory] = useState(0)
   const [user, setUser] = useState(null)
-  const [activeFeature, setActiveFeature] = useState(0)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef(null)
+  const { scrollYProgress } = useScroll()
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50])
+
+  // Refs for scroll animations
+  const [statsRef, statsInView] = useInView({ threshold: 0.3, triggerOnce: true })
+  const [techRef, techInView] = useInView({ threshold: 0.2, triggerOnce: true })
+  const [storiesRef, storiesInView] = useInView({ threshold: 0.2, triggerOnce: true })
+
+  const successStories = [
+    {
+      village: "Mendha Lekha, Maharashtra",
+      title: "First Village to Get Community Forest Rights",
+      quote: "With FRA, our village gained access to 1,800 hectares of forest land for sustainable management.",
+      beneficiaries: "450 families",
+      area: "1,800 hectares"
+    },
+    {
+      village: "Pakur District, Jharkhand",
+      title: "Empowering Santhal Tribes Through FRA",
+      quote: "Forest rights have transformed our lives. We can now legally collect tendu leaves and manage our forests.",
+      beneficiaries: "2,300 families",
+      area: "3,200 hectares"
+    },
+    {
+      village: "Rayagada, Odisha",
+      title: "Women-Led Forest Conservation",
+      quote: "FRA titles gave us the power to protect our forests from mining and preserve our traditional practices.",
+      beneficiaries: "180 families",
+      area: "850 hectares"
+    }
+  ]
 
   useEffect(() => {
     const token = Cookies.get('token')
@@ -32,430 +64,752 @@ export default function Home() {
     }
   }
 
-  const features = [
-    {
-      icon: Cloud,
-      title: 'Smart Upload',
-      description: 'AI-powered document processing with instant analysis',
-      color: 'from-water-400 to-water-600',
-      bg: 'bg-water-50',
-      image: '🌊'
-    },
-    {
-      icon: Shield,
-      title: 'Forest Protection',
-      description: 'Advanced monitoring and conservation strategies',
-      color: 'from-forest-400 to-forest-600',
-      bg: 'bg-forest-50',
-      image: '🌲'
-    },
-    {
-      icon: BarChart3,
-      title: 'Resource Analytics',
-      description: 'Real-time insights and predictive analysis',
-      color: 'from-purple-400 to-purple-600',
-      bg: 'bg-purple-50',
-      image: '📊'
-    }
-  ]
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStory((prev) => (prev + 1) % successStories.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
-  const stats = [
-    { value: '10K+', label: 'Documents Processed', icon: TrendingUp },
-    { value: '500+', label: 'Protected Areas', icon: Mountain },
-    { value: '99.9%', label: 'Accuracy Rate', icon: Award },
-    { value: '24/7', label: 'Monitoring', icon: Zap }
-  ]
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleLogout = () => {
+    Cookies.remove('token')
+    setUser(null)
+    setShowProfileMenu(false)
+    toast.success('Logged out successfully')
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50/50 to-white overflow-hidden">
+    <div className="min-h-screen bg-white">
       <Head>
-        <title>Vanmitra - Forest & Water Resource Management</title>
-        <meta name="description" content="Protect forests and water resources with AI-powered automation" />
+        <title>Vanmitra - Ministry of Tribal Affairs Initiative | Forest Rights Act Portal</title>
+        <meta name="description" content="Official FRA digitization portal by Ministry of Tribal Affairs, Government of India" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Navbar user={user} setUser={setUser} />
+      {/* Header with MoTA Branding */}
+      <header className="fixed top-0 w-full bg-white shadow-md z-50">
+        <div className="bg-forest-800 text-white py-1">
+          <div className="container mx-auto px-4 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span>भारत सरकार | Government of India</span>
+              <span className="hidden sm:inline">जनजातीय कार्य मंत्रालय | Ministry of Tribal Affairs</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/hi" className="hover:underline">हिंदी</Link>
+              <span>|</span>
+              <Link href="/en" className="hover:underline">English</Link>
+            </div>
+          </div>
+        </div>
 
-      {/* Background Decorations */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-forest-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-water-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-forest-100/10 via-transparent to-water-100/10 rounded-full blur-3xl"></div>
-      </div>
+        <nav className="bg-white border-b-2 border-forest-600">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo Section */}
+              <div className="flex items-center gap-4">
+                {/* Ashoka Emblem */}
+                <div className="w-12 h-12 bg-forest-700 rounded-full flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
 
-      {/* Hero Section - Enhanced */}
-      <section className="relative pt-32 pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* Animated Badge */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-forest-100 to-water-100 text-forest-700 text-sm font-medium rounded-full mb-8 shadow-lg"
-              >
-                <Sparkles className="w-4 h-4 animate-pulse" />
-                <span>AI-Powered Environmental Protection</span>
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              </motion.div>
+                {/* Vanmitra Logo and Text */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <Trees className="w-8 h-8 text-forest-600" />
+                    <h1 className="text-2xl font-bold text-forest-800">VANMITRA</h1>
+                  </div>
+                  <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
+                </div>
+              </div>
 
-              <h1 className="text-5xl md:text-7xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-forest-600 via-green-600 to-water-600 bg-clip-text text-transparent">
-                  Protecting
-                </span>
-                <br />
-                <span className="text-gray-900">Our Planet's</span>
-                <br />
-                <span className="bg-gradient-to-r from-water-600 to-forest-600 bg-clip-text text-transparent">
-                  Resources
-                </span>
-              </h1>
-
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Advanced AI technology meets environmental conservation.
-                Monitor, analyze, and protect forests and water resources with unprecedented accuracy.
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                {!user ? (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        const registerBtn = document.querySelector('[data-register-trigger]')
-                        if (registerBtn) registerBtn.click()
-                      }}
-                      className="group px-8 py-4 bg-gradient-to-r from-forest-600 to-water-600 text-white rounded-2xl font-semibold shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-8">
+                <Link href="/" className="text-forest-800 font-semibold hover:text-forest-600 transition-colors">Home</Link>
+                <Link href="/fra-act" className="text-gray-700 hover:text-forest-600 transition-colors">FRA Act</Link>
+                <Link href="/dashboard" className="text-gray-700 hover:text-forest-600 transition-colors">FRA Atlas</Link>
+                <Link href="/upload" className="text-gray-700 hover:text-forest-600 transition-colors">Upload</Link>
+                <Link href="/dashboard" className="text-gray-700 hover:text-forest-600 transition-colors">Dashboard</Link>
+                <Link href="/impact" className="text-gray-700 hover:text-forest-600 transition-colors">Impact</Link>
+                <Link href="/contact" className="text-gray-700 hover:text-forest-600 transition-colors">Contact</Link>
+                {user ? (
+                  <div className="relative" ref={profileMenuRef}>
+                    <button
+                      onClick={() => setShowProfileMenu(!showProfileMenu)}
+                      className="flex items-center gap-2 bg-forest-100 text-forest-800 px-3 py-2 rounded-full hover:bg-forest-200 transition-colors"
                     >
-                      <Sparkles className="w-5 h-5" />
-                      Start Free Trial
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-8 py-4 bg-white text-gray-700 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all border border-gray-200"
-                    >
-                      Watch Demo
-                    </motion.button>
-                  </>
+                      <div className="w-8 h-8 bg-forest-600 text-white rounded-full flex items-center justify-center font-semibold">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                      </div>
+                      <span className="font-medium">{user.name || 'Profile'}</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    {showProfileMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
+                      >
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-colors"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/upload"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-colors"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <Upload className="w-4 h-4" />
+                          Upload Document
+                        </Link>
+                        <hr className="my-1 border-gray-100" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </button>
+                      </motion.div>
+                    )}
+                  </div>
                 ) : (
-                  <motion.a
-                    href="/dashboard"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group px-8 py-4 bg-gradient-to-r from-forest-600 to-water-600 text-white rounded-2xl font-semibold shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
-                  >
-                    <LayoutDashboard className="w-5 h-5" />
-                    Go to Dashboard
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </motion.a>
+                  <Link href="/dashboard" className="bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Sign In
+                  </Link>
                 )}
               </div>
 
-              {/* Trust Indicators */}
-              <div className="flex items-center gap-8 mt-12">
-                <div className="flex -space-x-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-10 h-10 bg-gradient-to-br from-forest-400 to-water-400 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">
-                      {String.fromCharCode(65 + i)}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Trusted by</p>
-                  <p className="font-semibold text-gray-900">10,000+ Organizations</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Interactive Visual */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="relative bg-gradient-to-br from-forest-50 via-white to-water-50 rounded-3xl p-8 shadow-2xl border border-gray-100">
-                {/* Animated Elements */}
-                <motion.div
-                  animate={{
-                    rotate: [0, 360],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: "linear"
-                  }}
-                  className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-water-400 to-water-600 rounded-2xl opacity-20 blur-xl"
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Mini Cards */}
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="bg-white p-6 rounded-2xl shadow-lg border border-forest-100"
-                  >
-                    <Trees className="w-8 h-8 text-forest-600 mb-3" />
-                    <h4 className="font-semibold text-gray-900 mb-1">Forest Health</h4>
-                    <p className="text-sm text-gray-600">Real-time monitoring</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-green-600 font-medium">Active</span>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="bg-white p-6 rounded-2xl shadow-lg border border-water-100"
-                  >
-                    <Droplets className="w-8 h-8 text-water-600 mb-3" />
-                    <h4 className="font-semibold text-gray-900 mb-1">Water Quality</h4>
-                    <p className="text-sm text-gray-600">AI analysis</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-blue-600 font-medium">Monitoring</span>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="bg-gradient-to-br from-forest-100 to-forest-200 p-6 rounded-2xl col-span-2"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold text-gray-900">Protection Status</h4>
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Coverage Area</span>
-                        <span className="text-sm font-semibold">85%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: '85%' }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                          className="bg-gradient-to-r from-forest-500 to-water-500 h-2 rounded-full"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Floating Icons */}
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                  className="absolute -top-4 left-1/2 -translate-x-1/2"
-                >
-                  <div className="bg-white p-3 rounded-full shadow-lg">
-                    <Globe className="w-6 h-6 text-forest-600" />
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
+        </nav>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
+              className="md:hidden bg-white border-b overflow-hidden"
+            >
+              <div className="container mx-auto px-4 py-4 space-y-2">
+                {user && (
+                  <div className="border-b pb-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-semibold">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <Link href="/" className="block py-2 text-forest-800 font-semibold">Home</Link>
+                <Link href="/fra-act" className="block py-2 text-gray-700">FRA Act</Link>
+                <Link href="/dashboard" className="block py-2 text-gray-700">FRA Atlas</Link>
+                <Link href="/upload" className="block py-2 text-gray-700">Upload</Link>
+                <Link href="/dashboard" className="block py-2 text-gray-700">Dashboard</Link>
+                <Link href="/impact" className="block py-2 text-gray-700">Impact</Link>
+                <Link href="/contact" className="block py-2 text-gray-700">Contact</Link>
+                {user ? (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left py-2 text-red-600 font-semibold"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <Link href="/dashboard" className="block py-2 text-forest-600 font-semibold">
+                    Sign In
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden mt-24">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-forest-50 via-white to-earth-50"></div>
+
+        {/* Floating Elements */}
+        <motion.div
+          style={{ y }}
+          className="absolute top-20 left-20 text-forest-200 opacity-20"
+        >
+          <Trees className="w-32 h-32" />
+        </motion.div>
+        <motion.div
+          style={{ y: useTransform(scrollYProgress, [0, 1], [0, -30]) }}
+          className="absolute bottom-20 right-20 text-water-200 opacity-20"
+        >
+          <Droplets className="w-24 h-24" />
+        </motion.div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-5xl mx-auto"
+          >
+            <h1 className="text-5xl md:text-7xl font-bold text-forest-800 mb-6 leading-tight">
+              Empowering Tribal Communities through the
+              <span className="text-forest-600"> Forest Rights Act</span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
+              Digitizing FRA records, mapping assets, and enabling data-driven development for India's forests and forest dwellers.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link href="/dashboard" className="bg-forest-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-forest-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Explore FRA Atlas
+              </Link>
+              <Link href="/upload" className="bg-earth-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-earth-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                <Upload className="w-5 h-5" />
+                Submit FRA Claim
+              </Link>
+            </div>
+
+            {/* Quick Stats Bar */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-xl shadow-lg p-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-forest-600">28</p>
+                <p className="text-sm text-gray-600">States Covered</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-forest-600">40L+</p>
+                <p className="text-sm text-gray-600">Claims Processed</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-forest-600">1.2L</p>
+                <p className="text-sm text-gray-600">Villages</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-forest-600">85%</p>
+                <p className="text-sm text-gray-600">Satellite Verified</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Features Section - Enhanced Cards */}
-      <section className="py-20 px-4 relative">
-        <div className="max-w-7xl mx-auto">
+      {/* About MoTA Block */}
+      <section className="py-20 bg-gradient-to-r from-forest-50 to-earth-50">
+        <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
           >
-            <span className="text-forest-600 font-semibold text-sm uppercase tracking-wider">Features</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3 mb-4">
-              Powerful Tools for Conservation
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Everything you need to monitor, analyze, and protect our natural resources
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                onHoverStart={() => setActiveFeature(index)}
-                className="group relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-forest-200/50 to-water-200/50 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                <div className="relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border border-gray-100">
-                  <div className="absolute top-8 right-8 text-4xl opacity-10">{feature.image}</div>
-
-                  <motion.div
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.5 }}
-                    className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
-                  >
-                    <feature.icon className="w-7 h-7 text-white" />
-                  </motion.div>
-
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    {feature.description}
+            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="md:w-1/3">
+                  <div className="bg-forest-100 rounded-xl p-8 text-center">
+                    <Shield className="w-20 h-20 text-forest-700 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-forest-800">Ministry of Tribal Affairs</h3>
+                    <p className="text-sm text-forest-600 mt-2">Government of India</p>
+                  </div>
+                </div>
+                <div className="md:w-2/3">
+                  <h2 className="text-3xl font-bold text-forest-800 mb-4">Committed to Tribal Empowerment</h2>
+                  <p className="text-gray-700 mb-4">
+                    The Ministry of Tribal Affairs (MoTA) is committed to the socio-economic empowerment of India's tribal communities. Through initiatives like FRA digitization, MoTA ensures transparency, justice, and access to resources for millions of forest dwellers.
                   </p>
-
-                  <button className="text-forest-600 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
-                    Learn More
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  {/* Active Indicator */}
-                  {activeFeature === index && (
-                    <motion.div
-                      layoutId="activeFeature"
-                      className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-forest-500 to-water-500 rounded-b-3xl"
-                    />
-                  )}
+                  <p className="text-gray-700 mb-6">
+                    Our mission is to create an inclusive ecosystem where tribal communities can thrive while preserving their cultural heritage and traditional knowledge systems.
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-forest-600" />
+                      <span className="text-sm font-medium">Policy Implementation</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-forest-600" />
+                      <span className="text-sm font-medium">Digital Transformation</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-forest-600" />
+                      <span className="text-sm font-medium">Community Development</span>
+                    </div>
+                  </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section - Modern Design */}
-      <section className="py-20 px-4 bg-gradient-to-br from-forest-50 via-white to-water-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  className="w-16 h-16 bg-gradient-to-br from-forest-100 to-water-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
-                >
-                  <stat.icon className="w-8 h-8 text-forest-600" />
-                </motion.div>
-                <div className="text-4xl font-bold bg-gradient-to-r from-forest-600 to-water-600 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Enhanced */}
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-forest-600 via-green-600 to-water-600"></div>
-
-        {/* Animated Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10">
-            <Trees className="w-40 h-40 text-white" />
-          </div>
-          <div className="absolute bottom-10 right-10">
-            <Droplets className="w-40 h-40 text-white" />
-          </div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative max-w-4xl mx-auto text-center"
-        >
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-8"
-          >
-            <Sparkles className="w-10 h-10 text-white" />
+              </div>
+            </div>
           </motion.div>
-
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Join the Movement for a Greener Future
-          </h2>
-          <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
-            Be part of the solution. Start protecting our forests and water resources today with AI-powered technology.
-          </p>
-
-          {!user && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                const registerBtn = document.querySelector('[data-register-trigger]')
-                if (registerBtn) registerBtn.click()
-              }}
-              className="px-10 py-5 bg-white text-forest-700 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all"
-            >
-              Get Started Now - It's Free
-            </motion.button>
-          )}
-
-          {/* Social Proof */}
-          <div className="mt-12 flex items-center justify-center gap-8 flex-wrap">
-            <div className="flex items-center gap-2 text-white">
-              <Users className="w-5 h-5" />
-              <span>10,000+ Active Users</span>
-            </div>
-            <div className="flex items-center gap-2 text-white">
-              <Award className="w-5 h-5" />
-              <span>Award Winning Platform</span>
-            </div>
-            <div className="flex items-center gap-2 text-white">
-              <Globe className="w-5 h-5" />
-              <span>50+ Countries</span>
-            </div>
-          </div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Footer - Enhanced */}
-      <footer className="py-12 px-4 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="bg-gradient-to-r from-forest-600 to-water-600 p-2 rounded-xl">
-                <div className="flex items-center">
-                  <Trees className="w-5 h-5 text-white" />
-                  <Droplets className="w-4 h-4 text-white -ml-1" />
+      {/* What is FRA Act */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
+          >
+            <h2 className="text-4xl font-bold text-center text-forest-800 mb-12">
+              Understanding the Forest Rights Act
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="bg-forest-50 rounded-xl p-8">
+                  <ScrollText className="w-12 h-12 text-forest-600 mb-4" />
+                  <h3 className="text-2xl font-bold text-forest-800 mb-4">The Forest Rights Act, 2006</h3>
+                  <p className="text-gray-700 mb-4">
+                    The Forest Rights Act (FRA), 2006 recognizes the rights of forest-dwelling communities to land, resources, and sustainable livelihoods. It empowers tribal groups to legally access forest produce, farming land, and protect biodiversity.
+                  </p>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-forest-600 mt-0.5" />
+                      <span className="text-gray-700">Individual Forest Rights (IFR) for cultivation</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-forest-600 mt-0.5" />
+                      <span className="text-gray-700">Community Forest Rights (CFR) for resource access</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-forest-600 mt-0.5" />
+                      <span className="text-gray-700">Community Rights (CR) for grazing and water bodies</span>
+                    </li>
+                  </ul>
+                  <Link href="/fra-act" className="inline-flex items-center gap-2 text-forest-600 font-semibold hover:text-forest-700">
+                    Learn More <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
-              <div>
-                <p className="font-bold text-gray-900">Vanmitra</p>
-                <p className="text-xs text-gray-500">Protecting Nature, Preserving Future</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-earth-50 rounded-xl p-6 text-center">
+                  <Users className="w-10 h-10 text-earth-600 mx-auto mb-3" />
+                  <p className="text-3xl font-bold text-earth-700">2.5Cr+</p>
+                  <p className="text-sm text-gray-600">Forest Dwellers</p>
+                </div>
+                <div className="bg-water-50 rounded-xl p-6 text-center">
+                  <Mountain className="w-10 h-10 text-water-600 mx-auto mb-3" />
+                  <p className="text-3xl font-bold text-water-700">40M Ha</p>
+                  <p className="text-sm text-gray-600">Forest Area</p>
+                </div>
+                <div className="bg-forest-50 rounded-xl p-6 text-center">
+                  <FileText className="w-10 h-10 text-forest-600 mx-auto mb-3" />
+                  <p className="text-3xl font-bold text-forest-700">42.5L</p>
+                  <p className="text-sm text-gray-600">Claims Filed</p>
+                </div>
+                <div className="bg-earth-50 rounded-xl p-6 text-center">
+                  <Award className="w-10 h-10 text-earth-600 mx-auto mb-3" />
+                  <p className="text-3xl font-bold text-earth-700">20.5L</p>
+                  <p className="text-sm text-gray-600">Titles Granted</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Interactive FRA Atlas Preview */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-7xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-forest-800 mb-4">Interactive FRA Atlas</h2>
+              <p className="text-xl text-gray-600">Explore forest rights claims across India in real-time</p>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="bg-forest-600 text-white p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <MapPin className="w-6 h-6" />
+                  <span className="font-semibold">WebGIS Portal - Live Data</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Filter by:</span>
+                  <select className="bg-forest-700 px-3 py-1 rounded text-sm">
+                    <option>All States</option>
+                    <option>Maharashtra</option>
+                    <option>Odisha</option>
+                    <option>Chhattisgarh</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Map Preview */}
+              <div className="relative h-96 bg-gray-100">
+                <iframe
+                  src="/map-wrapper.html"
+                  className="w-full h-full"
+                  style={{ border: 'none' }}
+                />
+                <div className="absolute top-4 right-4">
+                  <Link href="/dashboard" className="bg-white text-forest-600 px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow inline-flex items-center gap-2 text-sm font-semibold">
+                    <Layers className="w-4 h-4" />
+                    Open Full Atlas
+                  </Link>
+                </div>
+              </div>
+
+              <div className="p-6 bg-gray-50 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Forest Cover</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm">Water Bodies</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm">Agricultural Land</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm">Settlements</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Dynamic Impact Stats */}
+      <section ref={statsRef} className="py-20 bg-gradient-to-br from-forest-600 to-forest-800 text-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={statsInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Impact at Scale</h2>
+              <p className="text-xl text-forest-100">Real-time statistics powered by AI and satellite technology</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                <CheckCircle className="w-8 h-8 mx-auto mb-3 text-forest-300" />
+                <div className="text-4xl font-bold mb-2">
+                  {statsInView && <CountUp end={4000000} duration={2.5} separator="," suffix="+" />}
+                </div>
+                <p className="text-sm text-forest-100">FRA Claims Digitized</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                <MapPin className="w-8 h-8 mx-auto mb-3 text-forest-300" />
+                <div className="text-4xl font-bold mb-2">
+                  {statsInView && <CountUp end={120000} duration={2.5} separator="," suffix="+" />}
+                </div>
+                <p className="text-sm text-forest-100">Villages Covered</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                <Award className="w-8 h-8 mx-auto mb-3 text-forest-300" />
+                <div className="text-4xl font-bold mb-2">
+                  {statsInView && <CountUp end={2500} duration={2.5} separator="," suffix="+" />}
+                </div>
+                <p className="text-sm text-forest-100">Community Rights Granted</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                <Satellite className="w-8 h-8 mx-auto mb-3 text-forest-300" />
+                <div className="text-4xl font-bold mb-2">
+                  {statsInView && <CountUp end={85} duration={2.5} suffix="%" />}
+                </div>
+                <p className="text-sm text-forest-100">Satellite Mapped & Verified</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-forest-600 transition-colors">About</a>
-              <a href="#" className="hover:text-forest-600 transition-colors">Features</a>
-              <a href="#" className="hover:text-forest-600 transition-colors">Contact</a>
-              <a href="#" className="hover:text-forest-600 transition-colors">Privacy</a>
+            <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+              <TrendingUp className="w-8 h-8 mx-auto mb-3 text-forest-300" />
+              <p className="text-lg">
+                With AI & Remote Sensing, we aim to increase FRA coverage by <span className="text-2xl font-bold">3x</span> in the next 5 years
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* AI + Tech Section */}
+      <section ref={techRef} className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={techInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-forest-800 mb-4">Technology for Transformation</h2>
+              <p className="text-xl text-gray-600">Leveraging cutting-edge AI and satellite technology for tribal empowerment</p>
             </div>
 
-            <div className="mt-4 md:mt-0">
-              <p className="text-sm text-gray-500">© 2024 Vanmitra. All rights reserved.</p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={techInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.1 }}
+                className="bg-gradient-to-br from-forest-50 to-forest-100 rounded-xl p-6 hover:shadow-xl transition-all transform hover:-translate-y-1"
+              >
+                <ScrollText className="w-12 h-12 text-forest-600 mb-4" />
+                <h3 className="text-xl font-bold text-forest-800 mb-2">Digitization</h3>
+                <p className="text-gray-600 text-sm">Extracting text from scanned FRA records using OCR and NLP</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={techInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.2 }}
+                className="bg-gradient-to-br from-water-50 to-water-100 rounded-xl p-6 hover:shadow-xl transition-all transform hover:-translate-y-1"
+              >
+                <Satellite className="w-12 h-12 text-water-600 mb-4" />
+                <h3 className="text-xl font-bold text-water-800 mb-2">Satellite AI Mapping</h3>
+                <p className="text-gray-600 text-sm">Detecting land, water, and forest assets using remote sensing</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={techInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-earth-50 to-earth-100 rounded-xl p-6 hover:shadow-xl transition-all transform hover:-translate-y-1"
+              >
+                <Globe className="w-12 h-12 text-earth-600 mb-4" />
+                <h3 className="text-xl font-bold text-earth-800 mb-2">WebGIS Portal</h3>
+                <p className="text-gray-600 text-sm">Explore FRA claims in real-time with interactive maps</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={techInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.4 }}
+                className="bg-gradient-to-br from-forest-50 to-earth-50 rounded-xl p-6 hover:shadow-xl transition-all transform hover:-translate-y-1"
+              >
+                <Brain className="w-12 h-12 text-forest-600 mb-4" />
+                <h3 className="text-xl font-bold text-forest-800 mb-2">DSS Engine</h3>
+                <p className="text-gray-600 text-sm">AI recommendations for PM-KISAN, Jal Jeevan Mission integration</p>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Success Stories Carousel */}
+      <section ref={storiesRef} className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={storiesInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-forest-800 mb-4">Success Stories</h2>
+              <p className="text-xl text-gray-600">Real impact in tribal communities across India</p>
+            </div>
+
+            <div className="relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStory}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white rounded-2xl shadow-xl overflow-hidden"
+                >
+                  <div className="grid md:grid-cols-2">
+                    <div className="bg-gradient-to-br from-forest-100 to-earth-100 p-8 md:p-12 flex items-center">
+                      <div>
+                        <h3 className="text-2xl font-bold text-forest-800 mb-2">
+                          {successStories[activeStory].title}
+                        </h3>
+                        <p className="text-lg text-forest-600 mb-4">{successStories[activeStory].village}</p>
+                        <blockquote className="text-gray-700 italic mb-6">
+                          "{successStories[activeStory].quote}"
+                        </blockquote>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white/50 rounded-lg p-3">
+                            <p className="text-2xl font-bold text-forest-700">{successStories[activeStory].beneficiaries}</p>
+                            <p className="text-sm text-gray-600">Beneficiaries</p>
+                          </div>
+                          <div className="bg-white/50 rounded-lg p-3">
+                            <p className="text-2xl font-bold text-earth-700">{successStories[activeStory].area}</p>
+                            <p className="text-sm text-gray-600">Forest Area</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-200 h-64 md:h-auto flex items-center justify-center">
+                      <Trees className="w-32 h-32 text-gray-400" />
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Carousel Controls */}
+              <div className="flex justify-center gap-2 mt-6">
+                {successStories.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveStory(index)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      index === activeStory ? 'bg-forest-600 w-8' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Get Involved Section */}
+      <section className="py-20 bg-gradient-to-br from-forest-600 to-earth-600 text-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <h2 className="text-4xl font-bold mb-4">Get Involved</h2>
+            <p className="text-xl mb-8 text-white/90">
+              Join us in our mission to empower tribal communities and protect forest rights
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                <Users className="w-12 h-12 mx-auto mb-3 text-white/80" />
+                <h3 className="text-xl font-semibold mb-2">NGOs & CBOs</h3>
+                <p className="text-sm text-white/80 mb-4">Partner with us to reach more communities</p>
+                <button className="text-white underline hover:no-underline">Join as Partner</button>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                <Building className="w-12 h-12 mx-auto mb-3 text-white/80" />
+                <h3 className="text-xl font-semibold mb-2">State Departments</h3>
+                <p className="text-sm text-white/80 mb-4">Integrate your FRA data with national portal</p>
+                <button className="text-white underline hover:no-underline">Learn More</button>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                <Globe className="w-12 h-12 mx-auto mb-3 text-white/80" />
+                <h3 className="text-xl font-semibold mb-2">Communities</h3>
+                <p className="text-sm text-white/80 mb-4">Submit claims and track your applications</p>
+                <button className="text-white underline hover:no-underline">Get Started</button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/upload" className="bg-white text-forest-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Upload Legacy Data
+              </Link>
+              <Link href="/contact" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-forest-700 transition-colors inline-flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Partner with MoTA
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-forest-900 text-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Shield className="w-8 h-8" />
+                <div>
+                  <p className="font-bold">Ministry of Tribal Affairs</p>
+                  <p className="text-xs text-forest-300">Government of India</p>
+                </div>
+              </div>
+              <p className="text-sm text-forest-200">
+                Empowering tribal communities through technology and policy implementation.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-forest-200">
+                <li><Link href="/fra-act" className="hover:text-white">FRA Act 2006</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white">FRA Atlas</Link></li>
+                <li><Link href="/upload" className="hover:text-white">Submit Claim</Link></li>
+                <li><Link href="/impact" className="hover:text-white">Impact Dashboard</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-forest-200">
+                <li><a href="#" className="hover:text-white">Documentation</a></li>
+                <li><a href="#" className="hover:text-white">API Access</a></li>
+                <li><a href="#" className="hover:text-white">Training Materials</a></li>
+                <li><a href="#" className="hover:text-white">FAQs</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Connect</h4>
+              <ul className="space-y-2 text-sm text-forest-200">
+                <li><a href="https://tribal.nic.in" target="_blank" rel="noopener noreferrer" className="hover:text-white">Official Website</a></li>
+                <li><a href="#" className="hover:text-white">Twitter @MoTA_India</a></li>
+                <li><a href="#" className="hover:text-white">MyGov India</a></li>
+                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-forest-700 pt-8 text-center">
+            <p className="text-sm text-forest-300">
+              © 2024 Vanmitra - An Initiative by Ministry of Tribal Affairs, Government of India. All rights reserved.
+            </p>
+            <div className="mt-4 flex justify-center gap-6 text-xs text-forest-400">
+              <a href="#" className="hover:text-white">Privacy Policy</a>
+              <a href="#" className="hover:text-white">Terms of Use</a>
+              <a href="#" className="hover:text-white">RTI</a>
+              <a href="#" className="hover:text-white">Accessibility</a>
             </div>
           </div>
         </div>

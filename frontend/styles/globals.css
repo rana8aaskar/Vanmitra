@@ -79,3 +79,40 @@ a {
   outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
+
+/* Custom Toast Styles */
+.custom-toast {
+  @apply !bg-transparent !shadow-none !p-0;
+}
+
+.custom-toast-body {
+  @apply !p-0 !m-0;
+}
+
+.custom-toast-progress-success {
+  @apply !bg-green-500;
+}
+
+.custom-toast-progress-error {
+  @apply !bg-red-500;
+}
+
+.custom-toast-progress-warning {
+  @apply !bg-yellow-500;
+}
+
+.custom-toast-progress-info {
+  @apply !bg-blue-500;
+}
+
+.Toastify__toast-container {
+  @apply !w-auto !max-w-md;
+}
+
+.Toastify__toast {
+  @apply !mb-3 !rounded-lg !min-h-0;
+}
+
+.Toastify__progress-bar {
+  @apply !h-1;
+}
