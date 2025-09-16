@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trees, Droplets, User, LogOut, Menu, X, Home, Upload, LayoutDashboard, Sparkles } from 'lucide-react'
+import { Trees, Droplets, User, LogOut, Menu, X, Home, Upload, LayoutDashboard, Sparkles, BookOpenText, BarChart2 } from 'lucide-react'
 import api from '../services/api'
 import Cookies from 'js-cookie'
 import { cn } from '../lib/utils'
@@ -97,19 +97,17 @@ export default function Navbar({ user, setUser }) {
               whileTap={{ scale: 0.98 }}
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-forest-400 to-water-400 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                <div className="relative bg-gradient-to-r from-forest-600 to-water-600 p-2.5 rounded-xl shadow-lg">
-                  <div className="flex items-center">
-                    <Trees className="w-6 h-6 text-white" />
-                    <Droplets className="w-5 h-5 text-white -ml-2" />
-                  </div>
+                <div className="relative bg-white p-2.5 rounded-xl shadow-lg border border-gray-200">
+                  <img src="/emblems/ashoka.svg" alt="Emblem of India" className="w-7 h-7 object-contain" />
                 </div>
               </div>
               <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-forest-700 to-water-700 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold text-gray-900">
                   Vanmitra
                 </span>
-                <p className="text-xs text-gray-500 -mt-1">Protect • Preserve • Prosper</p>
+                <p className="text-[10px] md:text-xs text-gray-600 -mt-1 leading-tight">
+                  An Initiative by the Ministry of Tribal Affairs, Govt. of India
+                </p>
               </div>
             </motion.a>
 
