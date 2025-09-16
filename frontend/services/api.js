@@ -93,6 +93,22 @@ class ApiService {
     const response = await this.client.get('/fra-docs/statistics')
     return response.data
   }
+
+  // Claim endpoints
+  async getClaimDetails(params) {
+    const response = await this.client.get('/claims/claim-details', { params })
+    return response.data
+  }
+
+  async getAllClaims(filters = {}) {
+    const response = await this.client.get('/claims/all-claims', { params: filters })
+    return response.data
+  }
+
+  async getClaimStatistics() {
+    const response = await this.client.get('/claims/statistics')
+    return response.data
+  }
 }
 
 const api = new ApiService()

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Map</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #map-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="map-container" src="/maps.html" style="width: 100%; height: 100%; border: none;"></iframe>
+
+    <script>
+        // Wait for the map iframe to load
+        const mapFrame = document.getElementById('map-container');
+        let allMarkers = [];
+        let currentFilters = {
+            water: true,
+            forest: true,
+            agriculture: true,
+            builtup: true,
+            mixed: true,
+            approved: true,
+            pending: true,
+            rejected: false
+        };
+
+        mapFrame.onload = function() {
+            try {
+                // Access the map's window and document
+                const mapWindow = mapFrame.contentWindow;
+                const mapDocument = mapFrame.contentDocument;
+
+                // Function to extract data from tooltip content
+                function extractDataFromTooltip(tooltipHtml) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(tooltipHtml, 'text/html');
+                    const text = doc.body.textContent || "";
+
+                    // Parse the tooltip text
+                    const lines = text.split('\n').filter(line => line.trim());
+                    const data = {};
+
+                    lines.forEach(line => {
+                        const parts = line.split(':');
+                        if (parts.length === 2) {
+                            const key = parts[0].replace('Claimant', 'claimant')
+                                              .replace('State', 'state')
+                                              .replace('Claim Type', 'claimType')
+                                              .replace('Status', 'status')
+                                              .trim();
+                            data[key] = parts[1].trim();
+                        }
+                    });
+
+                    return data;
+                }
+
+                // Function to determine asset type from claim type or other data
+                function getAssetType(data) {
+                    // You can implement more sophisticated logic here
+                    // For now, using a simple mapping
+                    const claimType = (data.claimType || '').toLowerCase();
+                    if (claimType.includes('water')) return 'water';
+                    if (claimType.includes('forest') || claimType === 'cfr') return 'forest';
+                    if (claimType.includes('agri') || claimType === 'ifr') return 'agriculture';
+                    if (claimType.includes('build') || claimType === 'cr') return 'builtup';
+
+                    // Random assignment if no clear type
+                    const types = ['water', 'forest', 'agriculture', 'builtup'];
+                    return types[Math.floor(Math.random() * types.length)];
+                }
+
+                // Wait a bit for Leaflet to initialize
+                setTimeout(() => {
+                    // Find all circle markers in the map
+                    const leafletPane = mapDocument.querySelector('.leaflet-pane');
+                    if (!leafletPane) return;
+
+                    // Access the Leaflet map object
+                    const mapId = 'map_fd36c2e6d8821440b0a76626e3242280';
+                    if (mapWindow[mapId]) {
+                        const map = mapWindow[mapId];
+
+                        // Store all markers with their data
+                        map.eachLayer(function(layer) {
+                            if (layer instanceof mapWindow.L.CircleMarker) {
+                                // Extract data from tooltip
+                                let markerData = {};
+                                if (layer._tooltip && layer._tooltip._content) {
+                                    markerData = extractDataFromTooltip(layer._tooltip._content);
+                                    markerData.assetType = getAssetType(markerData);
+                                }
+
+                                // Store marker with its data
+                                allMarkers.push({
+                                    marker: layer,
+                                    data: markerData,
+                                    originalOpacity: layer.options.opacity || 1,
+                                    originalFillOpacity: layer.options.fillOpacity || 0.2
+                                });
+
+                                // Add click handler
+                                layer.on('click', function(e) {
+                                    if (layer._tooltip && layer._tooltip._content) {
+                                        const data = extractDataFromTooltip(layer._tooltip._content);
+
+                                        // Add coordinates
+                                        const latlng = layer.getLatLng();
+                                        data.lat = latlng.lat;
+                                        data.lng = latlng.lng;
+                                        data.claimantName = data.claimant;
+
+                                        // Send message to parent window
+                                        window.parent.postMessage({
+                                            type: 'markerClick',
+                                            data: data
+                                        }, '*');
+                                    }
+                                });
+                            }
+                        });
+
+                        console.log(`Found ${allMarkers.length} markers on the map`);
+
+                        // Function to apply filters
+                        function applyFilters() {
+                            allMarkers.forEach(markerInfo => {
+                                const { marker, data } = markerInfo;
+                                const status = (data.status || '').toLowerCase();
+                                const assetType = data.assetType || 'other';
+
+                                let shouldShow = false;
+
+                                // Check status filters
+                                if (status === 'approved' && currentFilters.approved) shouldShow = true;
+                                else if (status === 'pending' && currentFilters.pending) shouldShow = true;
+                                else if (status === 'rejected' && currentFilters.rejected) shouldShow = true;
+                                else if (!status && currentFilters.pending) shouldShow = true; // Default to pending if no status
+
+                                // Check asset type filters
+                                if (shouldShow) {
+                                    // Only show if asset type is also enabled
+                                    shouldShow = currentFilters[assetType] || false;
+
+                                    // Special handling for mixed or unknown types
+                                    if (!shouldShow && !['water', 'forest', 'agriculture', 'builtup'].includes(assetType)) {
+                                        shouldShow = currentFilters.mixed || currentFilters.forest; // Default to forest for unknown
+                                    }
+                                }
+
+                                // Apply visibility
+                                if (shouldShow) {
+                                    marker.setStyle({
+                                        opacity: markerInfo.originalOpacity,
+                                        fillOpacity: markerInfo.originalFillOpacity
+                                    });
+
+                                    // Make sure marker is interactive
+                                    if (marker._path) {
+                                        marker._path.style.pointerEvents = 'auto';
+                                    }
+                                } else {
+                                    marker.setStyle({
+                                        opacity: 0,
+                                        fillOpacity: 0
+                                    });
+
+                                    // Make marker non-interactive when hidden
+                                    if (marker._path) {
+                                        marker._path.style.pointerEvents = 'none';
+                                    }
+                                }
+                            });
+
+                            // Count visible markers
+                            const visibleCount = allMarkers.filter(m => {
+                                const opacity = m.marker.options.opacity;
+                                return opacity > 0;
+                            }).length;
+
+                            console.log(`Filters applied: ${visibleCount} of ${allMarkers.length} markers visible`);
+                        }
+
+                        // Apply initial filters
+                        applyFilters();
+
+                        // Add general click handler to map
+                        map.on('click', function(e) {
+                            if (e.originalEvent && e.originalEvent.target) {
+                                const target = e.originalEvent.target;
+
+                                if (target.tagName === 'circle' || target.classList.contains('leaflet-marker-icon')) {
+                                    setTimeout(() => {
+                                        const tooltip = mapDocument.querySelector('.leaflet-tooltip');
+                                        if (tooltip) {
+                                            const tooltipContent = tooltip.innerHTML;
+                                            const data = extractDataFromTooltip(tooltipContent);
+
+                                            data.lat = e.latlng.lat;
+                                            data.lng = e.latlng.lng;
+                                            data.claimantName = data.claimant;
+
+                                            window.parent.postMessage({
+                                                type: 'markerClick',
+                                                data: data
+                                            }, '*');
+                                        }
+                                    }, 100);
+                                }
+                            }
+                        });
+
+                        // Listen for filter updates from parent
+                        window.addEventListener('message', function(event) {
+                            if (event.data.type === 'updateFilters') {
+                                console.log('Received filter update:', event.data.filters);
+                                currentFilters = event.data.filters;
+                                applyFilters();
+                            }
+                        });
+                    }
+                }, 1500); // Increased timeout to ensure map is fully loaded
+
+            } catch (error) {
+                console.error('Error setting up map interactions:', error);
+            }
+        };
+    </script>
+</body>
+</html>
