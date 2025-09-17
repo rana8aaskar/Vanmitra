@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { Trees, Droplets, Mountain, Building, Users, Globe, Award, ChevronRight, MapPin, Upload, BarChart3, Brain, Satellite, ScrollText, CheckCircle, ArrowRight, Menu, X, Shield, Target, TrendingUp, FileText, Activity, Layers, Navigation, Clock, User, LogOut, ChevronDown } from 'lucide-react'
 import CountUp from 'react-countup'
@@ -10,10 +11,17 @@ import api from '../services/api'
 import { toast } from 'react-toastify'
 
 export default function Home() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [activeStory, setActiveStory] = useState(0)
   const [user, setUser] = useState(null)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  })
   const profileMenuRef = useRef(null)
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], [0, -50])
@@ -21,31 +29,7 @@ export default function Home() {
   // Refs for scroll animations
   const [statsRef, statsInView] = useInView({ threshold: 0.3, triggerOnce: true })
   const [techRef, techInView] = useInView({ threshold: 0.2, triggerOnce: true })
-  const [storiesRef, storiesInView] = useInView({ threshold: 0.2, triggerOnce: true })
 
-  const successStories = [
-    {
-      village: "Mendha Lekha, Maharashtra",
-      title: "First Village to Get Community Forest Rights",
-      quote: "With FRA, our village gained access to 1,800 hectares of forest land for sustainable management.",
-      beneficiaries: "450 families",
-      area: "1,800 hectares"
-    },
-    {
-      village: "Pakur District, Jharkhand",
-      title: "Empowering Santhal Tribes Through FRA",
-      quote: "Forest rights have transformed our lives. We can now legally collect tendu leaves and manage our forests.",
-      beneficiaries: "2,300 families",
-      area: "3,200 hectares"
-    },
-    {
-      village: "Rayagada, Odisha",
-      title: "Women-Led Forest Conservation",
-      quote: "FRA titles gave us the power to protect our forests from mining and preserve our traditional practices.",
-      beneficiaries: "180 families",
-      area: "850 hectares"
-    }
-  ]
 
   useEffect(() => {
     const token = Cookies.get('token')
@@ -64,12 +48,6 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStory((prev) => (prev + 1) % successStories.length)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -80,6 +58,43 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await api.login(formData.email, formData.password)
+      Cookies.set('token', response.token, { expires: 7 })
+      api.setAuthToken(response.token)
+      setUser(response.user)
+      setShowLoginModal(false)
+      toast.success('Logged in successfully!')
+      setFormData({ name: '', email: '', password: '' })
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Login failed')
+    }
+  }
+
+  const handleRegister = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await api.register(formData.name, formData.email, formData.password)
+      Cookies.set('token', response.token, { expires: 7 })
+      api.setAuthToken(response.token)
+      setUser(response.user)
+      setShowRegisterModal(false)
+      toast.success('Registered successfully!')
+      setFormData({ name: '', email: '', password: '' })
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Registration failed')
+    }
+  }
 
   const handleLogout = () => {
     Cookies.remove('token')
@@ -97,115 +112,152 @@ export default function Home() {
       </Head>
 
       {/* Header with MoTA Branding */}
-      <header className="fixed top-0 w-full bg-white shadow-md z-50">
-        <div className="bg-forest-800 text-white py-1">
-          <div className="container mx-auto px-4 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span>भारत सरकार | Government of India</span>
-              <span className="hidden sm:inline">जनजातीय कार्य मंत्रालय | Ministry of Tribal Affairs</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/hi" className="hover:underline">हिंदी</Link>
-              <span>|</span>
-              <Link href="/en" className="hover:underline">English</Link>
-            </div>
-          </div>
-        </div>
-
-        <nav className="bg-white border-b-2 border-forest-600">
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 border-b border-forest-200">
+        <nav className="bg-white/95 backdrop-blur-md">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               {/* Logo Section */}
-              <div className="flex items-center gap-4">
-                {/* Ashoka Emblem */}
-                <div className="w-12 h-12 bg-forest-700 rounded-full flex items-center justify-center">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
-
-                {/* Vanmitra Logo and Text */}
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <Trees className="w-8 h-8 text-forest-600" />
-                    <h1 className="text-2xl font-bold text-forest-800">VANMITRA</h1>
+              <motion.div 
+                className="flex items-center gap-4"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link href="/" className="flex items-center gap-3 group">
+                  <motion.div
+                    whileHover={{ rotate: 5 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-14 h-14 drop-shadow-sm" />
+                    <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  </motion.div>
+                  <div className="flex flex-col">
+                    <h1 className="text-2xl font-bold text-forest-800 group-hover:text-forest-600 transition-colors duration-200">VANMITRA</h1>
+                    <p className="text-xs text-gray-600 group-hover:text-forest-500 transition-colors duration-200">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
                   </div>
-                  <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
-                </div>
-              </div>
+                </Link>
+              </motion.div>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-8">
-                <Link href="/" className="text-forest-800 font-semibold hover:text-forest-600 transition-colors">Home</Link>
-                <Link href="/fra-act" className="text-gray-700 hover:text-forest-600 transition-colors">FRA Act</Link>
-                <Link href="/dashboard" className="text-gray-700 hover:text-forest-600 transition-colors">FRA Atlas</Link>
-                <Link href="/upload" className="text-gray-700 hover:text-forest-600 transition-colors">Upload</Link>
-                <Link href="/dashboard" className="text-gray-700 hover:text-forest-600 transition-colors">Dashboard</Link>
-                <Link href="/impact" className="text-gray-700 hover:text-forest-600 transition-colors">Impact</Link>
-                <Link href="/contact" className="text-gray-700 hover:text-forest-600 transition-colors">Contact</Link>
+              <div className="hidden md:flex items-center gap-2">
+                {[
+                  { href: '/', label: 'Home', icon: null },
+                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
+                  { href: '/upload', label: 'Upload', icon: Upload },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Link 
+                      href={item.href} 
+                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                        router.pathname === item.href 
+                          ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' 
+                          : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'
+                      }`}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />}
+                      <span className="relative">
+                        {item.label}
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
+                      </span>
+                    </Link>
+                  </motion.div>
+                ))}
                 {user ? (
-                  <div className="relative" ref={profileMenuRef}>
+                  <motion.div 
+                    className="relative ml-4"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     <button
                       onClick={() => setShowProfileMenu(!showProfileMenu)}
-                      className="flex items-center gap-2 bg-forest-100 text-forest-800 px-3 py-2 rounded-full hover:bg-forest-200 transition-colors"
+                      className="group flex items-center gap-3 bg-gradient-to-r from-forest-100 to-forest-50 text-forest-800 px-4 py-2.5 rounded-xl hover:from-forest-200 hover:to-forest-100 transition-all duration-200 shadow-sm hover:shadow-md border border-forest-200"
                     >
-                      <div className="w-8 h-8 bg-forest-600 text-white rounded-full flex items-center justify-center font-semibold">
+                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm group-hover:scale-105 transition-transform duration-200">
                         {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
                       </div>
-                      <span className="font-medium">{user.name || 'Profile'}</span>
-                      <ChevronDown className="w-4 h-4" />
+                      <div className="text-left">
+                        <span className="font-medium text-sm">{user.name || 'Profile'}</span>
+                        <p className="text-xs text-forest-600">Welcome back</p>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
                     </button>
-                    {showProfileMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
-                      >
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
-                        </div>
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-colors"
-                          onClick={() => setShowProfileMenu(false)}
+                    {/* Profile Dropdown */}
+                    <AnimatePresence>
+                      {showProfileMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 backdrop-blur-sm"
                         >
-                          <BarChart3 className="w-4 h-4" />
-                          Dashboard
-                        </Link>
-                        <Link
-                          href="/upload"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-colors"
-                          onClick={() => setShowProfileMenu(false)}
-                        >
-                          <Upload className="w-4 h-4" />
-                          Upload Document
-                        </Link>
-                        <hr className="my-1 border-gray-100" />
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Logout
-                        </button>
-                      </motion.div>
-                    )}
-                  </div>
+                          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-forest-50 to-forest-100">
+                            <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                            <p className="text-xs text-forest-600">{user.email}</p>
+                          </div>
+                          <div className="py-2">
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Dashboard</span>
+                            </Link>
+                            <Link
+                              href="/upload"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <Upload className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Upload Document</span>
+                            </Link>
+                            <hr className="my-2 border-gray-100" />
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 w-full text-left group"
+                            >
+                              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Logout</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                 ) : (
-                  <Link href="/dashboard" className="bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Sign In
-                  </Link>
+                  <motion.button
+                    onClick={() => setShowLoginModal(true)}
+                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <User className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Sign In</span>
+                  </motion.button>
                 )}
               </div>
 
               {/* Mobile menu button */}
-              <button
+              <motion.button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden"
+                className="md:hidden p-2 rounded-lg hover:bg-forest-50 transition-colors duration-200"
+                whileTap={{ scale: 0.95 }}
               >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+                <motion.div
+                  animate={{ rotate: isMenuOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isMenuOpen ? <X className="w-6 h-6 text-forest-600" /> : <Menu className="w-6 h-6 text-forest-600" />}
+                </motion.div>
+              </motion.button>
             </div>
           </div>
         </nav>
@@ -214,43 +266,80 @@ export default function Home() {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              exit={{ height: 0 }}
-              className="md:hidden bg-white border-b overflow-hidden"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden bg-white/95 backdrop-blur-md border-b border-forest-200 overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 space-y-2">
+              <div className="container mx-auto px-4 py-6 space-y-1">
                 {user && (
-                  <div className="border-b pb-3 mb-3">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="border-b border-forest-100 pb-4 mb-4"
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-semibold">
-                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+                      <div className="w-12 h-12 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-6 h-6" />}
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <p className="text-sm text-forest-600">{user.email}</p>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
-                <Link href="/" className="block py-2 text-forest-800 font-semibold">Home</Link>
-                <Link href="/fra-act" className="block py-2 text-gray-700">FRA Act</Link>
-                <Link href="/dashboard" className="block py-2 text-gray-700">FRA Atlas</Link>
-                <Link href="/upload" className="block py-2 text-gray-700">Upload</Link>
-                <Link href="/dashboard" className="block py-2 text-gray-700">Dashboard</Link>
-                <Link href="/impact" className="block py-2 text-gray-700">Impact</Link>
-                <Link href="/contact" className="block py-2 text-gray-700">Contact</Link>
+                {[
+                  { href: '/', label: 'Home', icon: null },
+                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
+                  { href: '/upload', label: 'Upload', icon: Upload },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
+                    <Link 
+                      href={item.href}
+                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
+                        router.pathname === item.href 
+                          ? 'bg-forest-100 text-forest-800 font-semibold' 
+                          : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon && <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />}
+                      <span>{item.label}</span>
+                    </Link>
+                  </motion.div>
+                ))}
                 {user ? (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
                     onClick={handleLogout}
-                    className="w-full text-left py-2 text-red-600 font-semibold"
+                    className="w-full text-left py-3 px-4 text-red-600 font-semibold hover:bg-red-50 rounded-lg transition-colors duration-200"
                   >
                     Logout
-                  </button>
+                  </motion.button>
                 ) : (
-                  <Link href="/dashboard" className="block py-2 text-forest-600 font-semibold">
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="w-full text-left py-3 px-4 text-forest-600 font-semibold hover:bg-forest-50 rounded-lg transition-colors duration-200"
+                  >
                     Sign In
-                  </Link>
+                  </motion.button>
                 )}
               </div>
             </motion.div>
@@ -259,37 +348,32 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden mt-24">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-forest-50 via-white to-earth-50"></div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{
+        backgroundImage: 'url("/images/hero-forest-valley.jpg")',
+        backgroundSize: '120%',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
+        {/* Blurred Background Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/40 via-emerald-800/30 to-emerald-900/50 backdrop-blur-sm"></div>
+        
+        {/* Additional Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
 
-        {/* Floating Elements */}
-        <motion.div
-          style={{ y }}
-          className="absolute top-20 left-20 text-forest-200 opacity-20"
-        >
-          <Trees className="w-32 h-32" />
-        </motion.div>
-        <motion.div
-          style={{ y: useTransform(scrollYProgress, [0, 1], [0, -30]) }}
-          className="absolute bottom-20 right-20 text-water-200 opacity-20"
-        >
-          <Droplets className="w-24 h-24" />
-        </motion.div>
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-10 pt-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center max-w-5xl mx-auto"
           >
-            <h1 className="text-5xl md:text-7xl font-bold text-forest-800 mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
               Empowering Tribal Communities through the
-              <span className="text-forest-600"> Forest Rights Act</span>
-            </h1>
+              <span className="text-emerald-200"> Forest Rights Act</span>
+          </h1>
 
-            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
               Digitizing FRA records, mapping assets, and enabling data-driven development for India's forests and forest dwellers.
             </p>
 
@@ -302,25 +386,25 @@ export default function Home() {
                 <Upload className="w-5 h-5" />
                 Submit FRA Claim
               </Link>
-            </div>
+          </div>
 
             {/* Quick Stats Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-xl shadow-lg p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-forest-600">28</p>
-                <p className="text-sm text-gray-600">States Covered</p>
+                <p className="text-3xl font-bold text-white drop-shadow-lg">28</p>
+                <p className="text-sm text-white/80 drop-shadow-md">States Covered</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-forest-600">40L+</p>
-                <p className="text-sm text-gray-600">Claims Processed</p>
+                <p className="text-3xl font-bold text-white drop-shadow-lg">40L+</p>
+                <p className="text-sm text-white/80 drop-shadow-md">Claims Processed</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-forest-600">1.2L</p>
-                <p className="text-sm text-gray-600">Villages</p>
+                <p className="text-3xl font-bold text-white drop-shadow-lg">1.2L</p>
+                <p className="text-sm text-white/80 drop-shadow-md">Villages</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-forest-600">85%</p>
-                <p className="text-sm text-gray-600">Satellite Verified</p>
+                <p className="text-3xl font-bold text-white drop-shadow-lg">85%</p>
+                <p className="text-sm text-white/80 drop-shadow-md">Satellite Verified</p>
               </div>
             </div>
           </motion.div>
@@ -365,11 +449,11 @@ export default function Home() {
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-forest-600" />
                       <span className="text-sm font-medium">Community Development</span>
-                    </div>
-                  </div>
+                </div>
+                </div>
+                </div>
                 </div>
               </div>
-            </div>
           </motion.div>
         </div>
       </section>
@@ -409,11 +493,11 @@ export default function Home() {
                       <span className="text-gray-700">Community Rights (CR) for grazing and water bodies</span>
                     </li>
                   </ul>
-                  <Link href="/fra-act" className="inline-flex items-center gap-2 text-forest-600 font-semibold hover:text-forest-700">
+                  <a href="https://tribal.nic.in/FRA.aspx" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-forest-600 font-semibold hover:text-forest-700">
                     Learn More <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                </a>
               </div>
+            </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-earth-50 rounded-xl p-6 text-center">
@@ -632,75 +716,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Success Stories Carousel */}
-      <section ref={storiesRef} className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={storiesInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.6 }}
-            className="max-w-6xl mx-auto"
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-forest-800 mb-4">Success Stories</h2>
-              <p className="text-xl text-gray-600">Real impact in tribal communities across India</p>
-            </div>
-
-            <div className="relative">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeStory}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white rounded-2xl shadow-xl overflow-hidden"
-                >
-                  <div className="grid md:grid-cols-2">
-                    <div className="bg-gradient-to-br from-forest-100 to-earth-100 p-8 md:p-12 flex items-center">
-                      <div>
-                        <h3 className="text-2xl font-bold text-forest-800 mb-2">
-                          {successStories[activeStory].title}
-                        </h3>
-                        <p className="text-lg text-forest-600 mb-4">{successStories[activeStory].village}</p>
-                        <blockquote className="text-gray-700 italic mb-6">
-                          "{successStories[activeStory].quote}"
-                        </blockquote>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-white/50 rounded-lg p-3">
-                            <p className="text-2xl font-bold text-forest-700">{successStories[activeStory].beneficiaries}</p>
-                            <p className="text-sm text-gray-600">Beneficiaries</p>
-                          </div>
-                          <div className="bg-white/50 rounded-lg p-3">
-                            <p className="text-2xl font-bold text-earth-700">{successStories[activeStory].area}</p>
-                            <p className="text-sm text-gray-600">Forest Area</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-200 h-64 md:h-auto flex items-center justify-center">
-                      <Trees className="w-32 h-32 text-gray-400" />
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Carousel Controls */}
-              <div className="flex justify-center gap-2 mt-6">
-                {successStories.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveStory(index)}
-                    className={`w-3 h-3 rounded-full transition-all ${
-                      index === activeStory ? 'bg-forest-600 w-8' : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Get Involved Section */}
       <section className="py-20 bg-gradient-to-br from-forest-600 to-earth-600 text-white">
@@ -748,16 +763,16 @@ export default function Home() {
                 <Users className="w-5 h-5" />
                 Partner with MoTA
               </Link>
-            </div>
+                </div>
           </motion.div>
-        </div>
+                </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-forest-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
+                <div>
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="w-8 h-8" />
                 <div>
@@ -768,9 +783,9 @@ export default function Home() {
               <p className="text-sm text-forest-200">
                 Empowering tribal communities through technology and policy implementation.
               </p>
-            </div>
+                </div>
 
-            <div>
+                <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm text-forest-200">
                 <li><Link href="/fra-act" className="hover:text-white">FRA Act 2006</Link></li>
@@ -778,9 +793,9 @@ export default function Home() {
                 <li><Link href="/upload" className="hover:text-white">Submit Claim</Link></li>
                 <li><Link href="/impact" className="hover:text-white">Impact Dashboard</Link></li>
               </ul>
-            </div>
+                </div>
 
-            <div>
+                <div>
               <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-forest-200">
                 <li><a href="#" className="hover:text-white">Documentation</a></li>
@@ -788,9 +803,9 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white">Training Materials</a></li>
                 <li><a href="#" className="hover:text-white">FAQs</a></li>
               </ul>
-            </div>
+                </div>
 
-            <div>
+                <div>
               <h4 className="font-semibold mb-4">Connect</h4>
               <ul className="space-y-2 text-sm text-forest-200">
                 <li><a href="https://tribal.nic.in" target="_blank" rel="noopener noreferrer" className="hover:text-white">Official Website</a></li>
@@ -798,8 +813,8 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white">MyGov India</a></li>
                 <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
               </ul>
-            </div>
-          </div>
+                </div>
+              </div>
 
           <div className="border-t border-forest-700 pt-8 text-center">
             <p className="text-sm text-forest-300">
@@ -811,9 +826,193 @@ export default function Home() {
               <a href="#" className="hover:text-white">RTI</a>
               <a href="#" className="hover:text-white">Accessibility</a>
             </div>
-          </div>
-        </div>
+              </div>
+            </div>
       </footer>
+
+      {/* Login Modal */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={(e) => e.target === e.currentTarget && setShowLoginModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-forest-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-forest-800">Welcome Back</h2>
+                <p className="text-gray-600 mt-2">Sign in to access FRA Portal</p>
+              </div>
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-gray-600">
+                  New to Vanmitra?{' '}
+                  <button
+                    onClick={() => {
+                      setShowLoginModal(false)
+                      setShowRegisterModal(true)
+                    }}
+                    className="text-forest-600 hover:text-forest-700 font-semibold"
+                  >
+                    Create an account
+                  </button>
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Register Modal */}
+      <AnimatePresence>
+        {showRegisterModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={(e) => e.target === e.currentTarget && setShowRegisterModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-forest-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trees className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-forest-800">Join Vanmitra</h2>
+                <p className="text-gray-600 mt-2">Create account to access FRA services</p>
+              </div>
+
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Create Account
+                  </button>
+          </div>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-gray-600">
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => {
+                      setShowRegisterModal(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="text-forest-600 hover:text-forest-700 font-semibold"
+                  >
+                    Sign in
+                  </button>
+                </p>
+        </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
