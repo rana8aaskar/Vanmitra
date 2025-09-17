@@ -1,29 +1,24 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trees, Droplets, User, LogOut, Menu, X, Home, Upload, LayoutDashboard, Sparkles, BookOpenText, BarChart2 } from 'lucide-react'
-import api from '../services/api'
+import { Trees, Menu, X, Shield, LogOut, User as UserIcon, LayoutDashboard, MapPin, Upload, FileText, BarChart3, Phone } from 'lucide-react'
 import Cookies from 'js-cookie'
-import { cn } from '../lib/utils'
+import { toast } from 'react-toastify'
+import api from '../services/api'
 
 export default function Navbar({ user, setUser }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const router = useRouter()
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   })
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -42,6 +37,11 @@ export default function Navbar({ user, setUser }) {
       setShowLoginModal(false)
       toast.success('Logged in successfully!')
       setFormData({ name: '', email: '', password: '' })
+
+      // Redirect to dashboard after login
+      if (router.pathname === '/') {
+        router.push('/dashboard')
+      }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Login failed')
     }
@@ -57,6 +57,11 @@ export default function Navbar({ user, setUser }) {
       setShowRegisterModal(false)
       toast.success('Registered successfully!')
       setFormData({ name: '', email: '', password: '' })
+
+      // Redirect to dashboard after registration
+      if (router.pathname === '/') {
+        router.push('/dashboard')
+      }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Registration failed')
     }
@@ -67,361 +72,421 @@ export default function Navbar({ user, setUser }) {
     api.setAuthToken(null)
     setUser(null)
     toast.success('Logged out successfully')
+    router.push('/')
   }
 
-  const navLinks = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/upload', label: 'Upload', icon: Upload },
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  ]
+  const isActive = (path) => router.pathname === path
 
   return (
     <>
-      <nav
-        className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
-          scrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100"
-            : "bg-gradient-to-b from-white/90 via-white/70 to-transparent backdrop-blur-md"
-        )}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-forest-50/20 via-transparent to-water-50/20 pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <motion.a
-              href="/"
-              className="flex items-center space-x-3 group"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="relative">
-                <div className="relative bg-white p-2.5 rounded-xl shadow-lg border border-gray-200">
-                  <img src="/emblems/ashoka.svg" alt="Emblem of India" className="w-7 h-7 object-contain" />
-                </div>
-              </div>
-              <div>
-                <span className="text-2xl font-bold text-gray-900">
-                  Vanmitra
-                </span>
-                <p className="text-[10px] md:text-xs text-gray-600 -mt-1 leading-tight">
-                  An Initiative by the Ministry of Tribal Affairs, Govt. of India
-                </p>
-              </div>
-            </motion.a>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-2">
-              {navLinks.map((link, index) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group relative px-4 py-2.5 rounded-xl text-gray-700 hover:text-white transition-all duration-300"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-forest-500 to-water-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative flex items-center space-x-2">
-                    <link.icon className="w-4 h-4" />
-                    <span className="font-medium">{link.label}</span>
-                  </div>
-                </motion.a>
-              ))}
+      <header className="fixed top-0 w-full bg-white shadow-md z-50">
+        {/* Government Header */}
+        <div className="bg-forest-800 text-white py-1">
+          <div className="container mx-auto px-4 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span>भारत सरकार | Government of India</span>
+              <span className="hidden sm:inline">जनजातीय कार्य मंत्रालय | Ministry of Tribal Affairs</span>
             </div>
+            <div className="flex items-center gap-4">
+              <Link href="/hi" className="hover:underline">हिंदी</Link>
+              <span>|</span>
+              <Link href="/en" className="hover:underline">English</Link>
+            </div>
+          </div>
+        </div>
 
-            {/* User Section */}
-            <div className="flex items-center space-x-3">
-              {user ? (
-                <div className="flex items-center space-x-3">
-                  <motion.div
-                    className="hidden sm:flex items-center space-x-3 bg-gradient-to-r from-forest-50 to-water-50 px-4 py-2.5 rounded-full border border-forest-200/50"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="relative">
-                      <div className="w-9 h-9 bg-gradient-to-br from-forest-500 to-water-500 rounded-full flex items-center justify-center shadow-md">
-                        <span className="text-white text-sm font-bold">
-                          {(user.name || user.email).charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{user.name || 'User'}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </motion.div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleLogout}
-                    className="p-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
-                    title="Logout"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </motion.button>
+        {/* Main Navigation */}
+        <nav className="bg-white border-b-2 border-forest-600">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo Section */}
+              <Link href="/" className="flex items-center gap-4">
+                {/* Ashoka Emblem */}
+                <div className="w-12 h-12 bg-forest-700 rounded-full flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-white" />
                 </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+
+                {/* Vanmitra Logo and Text */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <Trees className="w-8 h-8 text-forest-600" />
+                    <h1 className="text-2xl font-bold text-forest-800">VANMITRA</h1>
+                  </div>
+                  <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
+                </div>
+              </Link>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-8">
+                <Link
+                  href="/"
+                  className={`transition-colors ${isActive('/') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/fra-act"
+                  className={`transition-colors ${isActive('/fra-act') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  FRA Act
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className={`transition-colors ${isActive('/dashboard') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  FRA Atlas
+                </Link>
+                <Link
+                  href="/upload"
+                  className={`transition-colors ${isActive('/upload') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  Upload
+                </Link>
+                <Link
+                  href="/impact"
+                  className={`transition-colors ${isActive('/impact') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  Impact
+                </Link>
+                <Link
+                  href="/contact"
+                  className={`transition-colors ${isActive('/contact') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                >
+                  Contact
+                </Link>
+
+                {/* User Menu */}
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors"
+                    >
+                      <UserIcon className="w-4 h-4" />
+                      <span>{user.name || 'User'}</span>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+                        >
+                          <Link
+                            href="/dashboard"
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <LayoutDashboard className="w-4 h-4" />
+                            Dashboard
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false)
+                              handleLogout()
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700 w-full text-left"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <button
                     onClick={() => setShowLoginModal(true)}
-                    data-login-trigger
-                    className="px-5 py-2.5 text-gray-700 bg-white/80 backdrop-blur border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-medium shadow-sm"
+                    className="bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors"
                   >
                     Login
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowRegisterModal(true)}
-                    data-register-trigger
-                    className="px-5 py-2.5 bg-gradient-to-r from-forest-600 to-water-600 text-white rounded-xl hover:from-forest-700 hover:to-water-700 transition-all font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Get Started
-                  </motion.button>
-                </div>
-              )}
+                  </button>
+                )}
+              </div>
 
-              {/* Mobile Menu Toggle */}
+              {/* Mobile menu button */}
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2.5 bg-gradient-to-r from-forest-100 to-water-100 text-forest-700 rounded-xl"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
           </div>
+        </nav>
 
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden bg-white/95 backdrop-blur-xl rounded-b-2xl shadow-lg"
-              >
-                <div className="py-4 px-2 space-y-2">
-                  {navLinks.map((link) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-forest-50 hover:to-water-50 rounded-xl transition-all"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <link.icon className="w-5 h-5 text-forest-600" />
-                      <span className="font-medium">{link.label}</span>
-                    </a>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </nav>
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
+              className="md:hidden bg-white border-b overflow-hidden"
+            >
+              <div className="container mx-auto px-4 py-4 space-y-2">
+                <Link
+                  href="/"
+                  className={`block py-2 ${isActive('/') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/fra-act"
+                  className={`block py-2 ${isActive('/fra-act') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  FRA Act
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className={`block py-2 ${isActive('/dashboard') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  FRA Atlas
+                </Link>
+                <Link
+                  href="/upload"
+                  className={`block py-2 ${isActive('/upload') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Upload
+                </Link>
+                <Link
+                  href="/impact"
+                  className={`block py-2 ${isActive('/impact') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Impact
+                </Link>
+                <Link
+                  href="/contact"
+                  className={`block py-2 ${isActive('/contact') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact
+                </Link>
 
-      {/* Enhanced Login Modal */}
+                {user ? (
+                  <>
+                    <div className="border-t pt-2 mt-2">
+                      <Link
+                        href="/dashboard"
+                        className="block py-2 text-gray-700"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false)
+                          handleLogout()
+                        }}
+                        className="block py-2 text-gray-700 w-full text-left"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="block py-2 text-forest-600 font-semibold w-full text-left"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* Login Modal */}
       <AnimatePresence>
         {showLoginModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={(e) => e.target === e.currentTarget && setShowLoginModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl"
             >
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-water-200/50 to-transparent rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-forest-200/50 to-transparent rounded-full blur-2xl"></div>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-forest-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <UserIcon className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-forest-800">Welcome Back</h2>
+                <p className="text-gray-600 mt-2">Sign in to access FRA Portal</p>
+              </div>
 
-              <div className="relative">
-                <div className="text-center mb-8">
-                  <motion.div
-                    className="w-16 h-16 bg-gradient-to-br from-water-500 to-water-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl"
-                    initial={{ rotate: -180, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <User className="w-8 h-8 text-white" />
-                  </motion.div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-                  <p className="text-gray-600">Sign in to continue your journey</p>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
                 </div>
+              </form>
 
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-water-500/50 focus:border-water-500 transition-all"
-                      placeholder="you@example.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-water-500/50 focus:border-water-500 transition-all"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginModal(false)}
-                      className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-water-600 to-water-700 text-white rounded-xl hover:from-water-700 hover:to-water-800 transition-all font-medium shadow-lg hover:shadow-xl"
-                    >
-                      Sign In
-                    </button>
-                  </div>
-                </form>
-
-                <div className="mt-6 text-center">
-                  <p className="text-gray-600">
-                    New to Vanmitra?{' '}
-                    <button
-                      onClick={() => {
-                        setShowLoginModal(false)
-                        setShowRegisterModal(true)
-                      }}
-                      className="text-forest-600 hover:text-forest-700 font-semibold hover:underline"
-                    >
-                      Create an account
-                    </button>
-                  </p>
-                </div>
+              <div className="mt-6 text-center">
+                <p className="text-gray-600">
+                  New to Vanmitra?{' '}
+                  <button
+                    onClick={() => {
+                      setShowLoginModal(false)
+                      setShowRegisterModal(true)
+                    }}
+                    className="text-forest-600 hover:text-forest-700 font-semibold"
+                  >
+                    Create an account
+                  </button>
+                </p>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Enhanced Register Modal */}
+      {/* Register Modal */}
       <AnimatePresence>
         {showRegisterModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={(e) => e.target === e.currentTarget && setShowRegisterModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl"
             >
-              <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-forest-200/50 to-transparent rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-water-200/50 to-transparent rounded-full blur-2xl"></div>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-forest-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trees className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-forest-800">Join Vanmitra</h2>
+                <p className="text-gray-600 mt-2">Create account to access FRA services</p>
+              </div>
 
-              <div className="relative">
-                <div className="text-center mb-8">
-                  <motion.div
-                    className="w-16 h-16 bg-gradient-to-br from-forest-500 to-forest-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl"
-                    initial={{ rotate: 180, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <Trees className="w-8 h-8 text-white" />
-                  </motion.div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Vanmitra</h2>
-                  <p className="text-gray-600">Start protecting our planet today</p>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-forest-600 text-white rounded-lg hover:bg-forest-700 transition-colors"
+                  >
+                    Create Account
+                  </button>
                 </div>
+              </form>
 
-                <form onSubmit={handleRegister} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-forest-500/50 focus:border-forest-500 transition-all"
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-forest-500/50 focus:border-forest-500 transition-all"
-                      placeholder="you@example.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-forest-500/50 focus:border-forest-500 transition-all"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowRegisterModal(false)}
-                      className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-forest-600 to-forest-700 text-white rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all font-medium shadow-lg hover:shadow-xl"
-                    >
-                      Create Account
-                    </button>
-                  </div>
-                </form>
-
-                <div className="mt-6 text-center">
-                  <p className="text-gray-600">
-                    Already have an account?{' '}
-                    <button
-                      onClick={() => {
-                        setShowRegisterModal(false)
-                        setShowLoginModal(true)
-                      }}
-                      className="text-water-600 hover:text-water-700 font-semibold hover:underline"
-                    >
-                      Sign in
-                    </button>
-                  </p>
-                </div>
+              <div className="mt-6 text-center">
+                <p className="text-gray-600">
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => {
+                      setShowRegisterModal(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="text-forest-600 hover:text-forest-700 font-semibold"
+                  >
+                    Sign in
+                  </button>
+                </p>
               </div>
             </motion.div>
           </motion.div>

@@ -8,7 +8,7 @@ import {
   Mountain, Building, Layers, Info, ZoomIn, ZoomOut,
   Navigation, Calendar, Clock, CheckCircle, XCircle, AlertCircle,
   User, FileText, Activity, Hash, Home, CreditCard, Users,
-  Globe, Gavel, UserCheck, Building2, IndianRupee, Download
+  Globe, Gavel, UserCheck, Building2, IndianRupee, Download, X
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 import api from '../services/api'
@@ -58,8 +58,11 @@ export default function Dashboard() {
   useEffect(() => {
     // Set up message listener for map interactions
     const handleMessage = async (event) => {
+      console.log('Received message:', event.data)
+
       if (event.data.type === 'markerClick') {
         const clickedData = event.data.data
+        console.log('Marker clicked data:', clickedData)
         setLoadingClaim(true)
         setRightPanelOpen(true)
 
@@ -381,7 +384,7 @@ export default function Dashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute right-0 top-0 bottom-0 w-[480px] z-30 p-4"
+              className="absolute right-0 top-20 bottom-0 w-[480px] z-[60] p-4"
             >
               <motion.div
                 initial={{ x: 500, opacity: 0 }}
@@ -399,9 +402,10 @@ export default function Dashboard() {
                     </h2>
                     <button
                       onClick={() => setRightPanelOpen(false)}
-                      className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                      className="p-2 bg-white/10 hover:bg-white/25 rounded-lg transition-all transform hover:scale-110 group"
+                      title="Close"
                     >
-                      <XCircle className="w-5 h-5 text-white" />
+                      <X className="w-6 h-6 text-white group-hover:text-white/90" />
                     </button>
                   </div>
                 </div>

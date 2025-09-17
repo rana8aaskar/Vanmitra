@@ -6,6 +6,7 @@ from datetime import datetime
 sample_data = {
     'CLAIMANT_NAME': 'Gaurika Edwin',
     'SPOUSE_NAME': 'Chaltanya Bhargava',
+    'GENDER': 'Female',
     'PATTA_TITLE_NO': 'WW87343',
     'AADHAAR_NO': '192995350383',
     'CATEGORY': '2',

@@ -112,3 +112,6 @@ Thumbs.db
 *.bak
 *.backup
 *.old
+
+# Maps file
+frontend/public/maps.html

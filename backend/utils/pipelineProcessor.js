@@ -170,6 +170,8 @@ class PipelineProcessor {
     return {
       claimant_name: csvRow.CLAIMANT_NAME || '',
       spouse_name: csvRow.SPOUSE_NAME || '',
+      age: csvRow.AGE || null,
+      gender: csvRow.GENDER || 'Not Specified',
       patta_title_no: csvRow.PATTA_TITLE_NO || '',
       aadhaar_no: csvRow.AADHAAR_NO || '',
       category: csvRow.CATEGORY || '',

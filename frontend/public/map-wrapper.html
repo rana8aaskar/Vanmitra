@@ -87,10 +87,31 @@
                     const leafletPane = mapDocument.querySelector('.leaflet-pane');
                     if (!leafletPane) return;
 
-                    // Access the Leaflet map object
-                    const mapId = 'map_fd36c2e6d8821440b0a76626e3242280';
-                    if (mapWindow[mapId]) {
-                        const map = mapWindow[mapId];
+                    // Find the Leaflet map object dynamically
+                    let map = null;
+
+                    // Try to find map by looking for variables starting with 'map_'
+                    for (let key in mapWindow) {
+                        if (key.startsWith('map_') && mapWindow[key] && mapWindow[key]._container) {
+                            map = mapWindow[key];
+                            console.log('Found map with ID:', key);
+                            break;
+                        }
+                    }
+
+                    // Fallback: try to find map via L.Map instances
+                    if (!map && mapWindow.L && mapWindow.L.Map) {
+                        const mapContainers = mapDocument.querySelectorAll('.folium-map');
+                        if (mapContainers.length > 0) {
+                            const mapId = mapContainers[0].id;
+                            if (mapWindow[mapId]) {
+                                map = mapWindow[mapId];
+                                console.log('Found map via container ID:', mapId);
+                            }
+                        }
+                    }
+
+                    if (map) {
 
                         // Store all markers with their data
                         map.eachLayer(function(layer) {
@@ -229,6 +250,12 @@
                                 applyFilters();
                             }
                         });
+                    } else {
+                        console.error('Could not find Leaflet map object. Retrying...');
+                        // Retry after a delay
+                        setTimeout(() => {
+                            mapFrame.onload();
+                        }, 2000);
                     }
                 }, 1500); // Increased timeout to ensure map is fully loaded
 
