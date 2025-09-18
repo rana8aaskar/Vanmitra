@@ -1,0 +1,46 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background circle -->
+  <circle cx="60" cy="60" r="60" fill="white"/>
+
+  <!-- Outer dark brown ring -->
+  <circle cx="60" cy="60" r="58" stroke="#8B4513" stroke-width="4" stroke-dasharray="8,4" fill="none"/>
+
+  <!-- Inner green ring -->
+  <circle cx="60" cy="60" r="52" stroke="#228B22" stroke-width="3" stroke-dasharray="6,3" fill="none"/>
+
+  <!-- Tree trunk (main structure) -->
+  <path d="M60 25 L55 45 L50 50 L55 55 L60 50 L65 55 L70 50 L65 45 L60 25 Z" fill="#8B4513"/>
+
+  <!-- Tree canopy (green leaves) -->
+  <circle cx="50" cy="35" r="8" fill="#228B22"/>
+  <circle cx="70" cy="35" r="8" fill="#228B22"/>
+  <circle cx="60" cy="30" r="10" fill="#228B22"/>
+  <circle cx="45" cy="40" r="6" fill="#228B22"/>
+  <circle cx="75" cy="40" r="6" fill="#228B22"/>
+
+  <!-- Orange accent leaves -->
+  <circle cx="52" cy="32" r="3" fill="#FF8C00"/>
+  <circle cx="68" cy="32" r="3" fill="#FF8C00"/>
+  <circle cx="60" cy="28" r="4" fill="#FF8C00"/>
+
+  <!-- Tree roots -->
+  <path d="M55 55 Q50 65 45 60 Q50 70 55 65" fill="#8B4513"/>
+  <path d="M65 55 Q70 65 75 60 Q70 70 65 65" fill="#8B4513"/>
+  <path d="M60 50 Q60 65 60 70" stroke="#8B4513" stroke-width="2" fill="none"/>
+
+  <!-- Human figures on left side -->
+  <circle cx="45" cy="60" r="2" fill="#8B4513"/>
+  <rect x="43" y="62" width="4" height="6" fill="#8B4513"/>
+  <circle cx="42" cy="58" r="1.5" fill="#8B4513"/>
+  <rect x="40" y="60" width="3" height="4" fill="#8B4513"/>
+  <circle cx="48" cy="58" r="1.5" fill="#8B4513"/>
+  <rect x="46" y="60" width="3" height="4" fill="#8B4513"/>
+
+  <!-- Human figures on right side -->
+  <circle cx="75" cy="60" r="2" fill="#8B4513"/>
+  <rect x="73" y="62" width="4" height="6" fill="#8B4513"/>
+  <circle cx="72" cy="58" r="1.5" fill="#8B4513"/>
+  <rect x="70" y="60" width="3" height="4" fill="#8B4513"/>
+  <circle cx="78" cy="58" r="1.5" fill="#8B4513"/>
+  <rect x="76" y="60" width="3" height="4" fill="#8B4513"/>
+</svg>

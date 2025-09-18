@@ -9,9 +9,10 @@ import { useInView } from 'react-intersection-observer'
 import Cookies from 'js-cookie'
 import api from '../services/api'
 import { toast } from 'react-toastify'
-import { Cinzel } from 'next/font/google'
+import { Cinzel, Playfair_Display } from 'next/font/google'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['900'] })
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['900'], style: ['normal', 'italic'] })
 
 export default function Home() {
   const router = useRouter()
@@ -111,16 +112,17 @@ export default function Home() {
       <Head>
         <title>Vanmitra - Ministry of Tribal Affairs Initiative | Forest Rights Act Portal</title>
         <meta name="description" content="Official FRA digitization portal by Ministry of Tribal Affairs, Government of India" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="alternate icon" href="/favicon.ico" />
       </Head>
 
       {/* Header with MoTA Branding */}
-      <header className="fixed top-0 w-full bg-transparent backdrop-blur-0 shadow-none z-50 border-none">
-        <nav className="bg-transparent backdrop-blur-0">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
+      <header className="fixed top-0 w-full z-50">
+        <nav className="mx-8 mt-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-full shadow-lg px-6 py-2">
+            <div className="flex items-center justify-between h-14">
               {/* Logo Section */}
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-4"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -131,17 +133,22 @@ export default function Home() {
                     transition={{ duration: 0.3 }}
                     className="relative"
                   >
-                    <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-14 h-14 drop-shadow-sm" />
+                    <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-12 h-12 drop-shadow-sm" />
                     <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   </motion.div>
-                  
+                  <span className={`${playfair.className} text-2xl font-bold text-forest-800 tracking-wide hidden sm:block`}>
+                    VANMITRA
+                  </span>
                 </Link>
+                <div className="h-8 w-px bg-gray-300"></div>
+                <img src="/images/Ministry_of_Tribal_Affairs (1).svg" alt="Ministry of Tribal Affairs" className="h-10" />
               </motion.div>
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
-                {[
-                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
+                {user && [
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
                 ].map((item, index) => (
                   <motion.div
                     key={item.href}
@@ -149,18 +156,18 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                   >
-                    <Link 
-                      href={item.href} 
+                    <Link
+                      href={item.href}
                       className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                        router.pathname === item.href 
-                          ? 'bg-white/20 text-white font-semibold shadow-sm' 
-                          : 'text-white hover:bg-white/10'
+                        router.pathname === item.href
+                          ? 'bg-forest-600 text-white font-bold shadow-sm'
+                          : 'text-forest-700 font-semibold hover:bg-forest-50'
                       }`}
                     >
-                      {item.icon && <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />}
-                      <span className="relative">
+                      {item.icon && <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />}
+                      <span className="relative text-base">
                         {item.label}
-                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-200"></span>
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
                       </span>
                     </Link>
                   </motion.div>
@@ -176,12 +183,12 @@ export default function Home() {
                       onClick={() => setShowProfileMenu(!showProfileMenu)}
                       className="group flex items-center gap-3 bg-gradient-to-r from-forest-100 to-forest-50 text-forest-800 px-4 py-2.5 rounded-xl hover:from-forest-200 hover:to-forest-100 transition-all duration-200 shadow-sm hover:shadow-md border border-forest-200"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm group-hover:scale-105 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-bold shadow-sm group-hover:scale-105 transition-transform duration-200">
                         {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
                       </div>
                       <div className="text-left">
-                        <span className="font-medium text-sm">{user.name || 'Profile'}</span>
-                        <p className="text-xs text-forest-600">Welcome back</p>
+                        <span className="font-bold text-base">{user.name || 'Profile'}</span>
+                        <p className="text-xs font-semibold text-forest-600">Welcome back</p>
                       </div>
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
                     </button>
@@ -232,12 +239,12 @@ export default function Home() {
                 ) : (
                   <motion.button
                     onClick={() => setShowLoginModal(true)}
-                    className="group flex items-center gap-2 bg-white text-forest-700 px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group flex items-center gap-2 bg-forest-600 text-white px-6 py-2.5 rounded-full hover:bg-forest-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <User className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="font-medium">Sign In</span>
+                    <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-bold text-base">Sign In</span>
                   </motion.button>
                 )}
               </div>
@@ -267,9 +274,9 @@ export default function Home() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden bg-transparent backdrop-blur-0 border-b-0 overflow-hidden"
+              className="md:hidden bg-white rounded-b-3xl shadow-lg overflow-hidden mx-8"
             >
-              <div className="container mx-auto px-4 py-6 space-y-1">
+              <div className="px-4 py-6 space-y-1">
                 {user && (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }}
@@ -288,8 +295,9 @@ export default function Home() {
                     </div>
                   </motion.div>
                 )}
-                {[
-                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
+                {user && [
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
                 ].map((item, index) => (
                   <motion.div
                     key={item.href}
@@ -297,12 +305,12 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 + index * 0.05 }}
                   >
-                    <Link 
+                    <Link
                       href={item.href}
                       className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
-                        router.pathname === item.href 
-                          ? 'bg-white/20 text-white font-semibold' 
-                          : 'text-white hover:bg-white/10'
+                        router.pathname === item.href
+                          ? 'bg-forest-600 text-white font-semibold'
+                          : 'text-forest-700 hover:bg-forest-50'
                       }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -355,17 +363,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
 
 
-        <div className="container mx-auto px-4 relative z-10 pt-24">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6 flex justify-center"
-          >
-              <span className={`${cinzel.className} text-5xl md:text-8xl font-extrabold tracking-widest text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)]`}>
-                VANMITRA
-              </span>
-            </motion.div>
+        <div className="container mx-auto px-4 relative z-10 pt-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -413,23 +411,33 @@ export default function Home() {
               )}
           </div>
 
-            {/* Quick Stats Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white drop-shadow-lg">28</p>
-                <p className="text-sm text-white/80 drop-shadow-md">States Covered</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white drop-shadow-lg">40L+</p>
-                <p className="text-sm text-white/80 drop-shadow-md">Claims Processed</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white drop-shadow-lg">1.2L</p>
-                <p className="text-sm text-white/80 drop-shadow-md">Villages</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white drop-shadow-lg">85%</p>
-                <p className="text-sm text-white/80 drop-shadow-md">Satellite Verified</p>
+            {/* Quick Stats Bar - Over Image */}
+            <div className="absolute -bottom-24 left-0 right-0">
+              <div className="container mx-auto px-4">
+                <div className="bg-black/50 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-white drop-shadow-lg">4</p>
+                      <p className="text-sm text-white/90 drop-shadow-md font-medium">Focus States</p>
+                      <p className="text-xs text-white/70 mt-1">MP, Tripura, Odisha, Telangana</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-white drop-shadow-lg">FRA</p>
+                      <p className="text-sm text-white/90 drop-shadow-md font-medium">Atlas & WebGIS</p>
+                      <p className="text-xs text-white/70 mt-1">AI-Powered Platform</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-white drop-shadow-lg">DSS</p>
+                      <p className="text-sm text-white/90 drop-shadow-md font-medium">Decision Support</p>
+                      <p className="text-xs text-white/70 mt-1">Integrated Monitoring</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-white drop-shadow-lg">CSS</p>
+                      <p className="text-sm text-white/90 drop-shadow-md font-medium">Scheme Integration</p>
+                      <p className="text-xs text-white/70 mt-1">PM-KISAN, MGNREGA</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -448,8 +456,8 @@ export default function Home() {
             <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="md:w-1/3">
-                  <div className="bg-forest-100 rounded-xl p-8 text-center">
-                    <Shield className="w-20 h-20 text-forest-700 mx-auto mb-4" />
+                  <div className="rounded-xl p-8 text-center">
+                    <img src="/images/Ministry_of_Tribal_Affairs (1).svg" alt="Ministry of Tribal Affairs" className="h-24 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-forest-800">Ministry of Tribal Affairs</h3>
                     <p className="text-sm text-forest-600 mt-2">Government of India</p>
                   </div>
@@ -551,60 +559,144 @@ export default function Home() {
         </div>
       </section>
 
-
-      {/* Dynamic Impact Stats */}
-      <section ref={statsRef} className="py-20 bg-gradient-to-br from-forest-600 to-forest-800 text-white">
+      {/* How We Process FRA Claims */}
+      <section className="py-20 bg-gradient-to-br from-forest-50 to-earth-50">
         <div className="container mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={statsInView ? { opacity: 1 } : {}}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="max-w-6xl mx-auto"
           >
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4">Impact at Scale</h2>
-              <p className="text-xl text-forest-100">Real-time statistics powered by AI and satellite technology</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-                <CheckCircle className="w-8 h-8 mx-auto mb-3 text-forest-300" />
-                <div className="text-4xl font-bold mb-2">
-                  {statsInView && <CountUp end={4000000} duration={2.5} separator="," suffix="+" />}
-                </div>
-                <p className="text-sm text-forest-100">FRA Claims Digitized</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-                <MapPin className="w-8 h-8 mx-auto mb-3 text-forest-300" />
-                <div className="text-4xl font-bold mb-2">
-                  {statsInView && <CountUp end={120000} duration={2.5} separator="," suffix="+" />}
-                </div>
-                <p className="text-sm text-forest-100">Villages Covered</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-                <Award className="w-8 h-8 mx-auto mb-3 text-forest-300" />
-                <div className="text-4xl font-bold mb-2">
-                  {statsInView && <CountUp end={2500} duration={2.5} separator="," suffix="+" />}
-                </div>
-                <p className="text-sm text-forest-100">Community Rights Granted</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-                <Satellite className="w-8 h-8 mx-auto mb-3 text-forest-300" />
-                <div className="text-4xl font-bold mb-2">
-                  {statsInView && <CountUp end={85} duration={2.5} suffix="%" />}
-                </div>
-                <p className="text-sm text-forest-100">Satellite Mapped & Verified</p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-              <TrendingUp className="w-8 h-8 mx-auto mb-3 text-forest-300" />
-              <p className="text-lg">
-                With AI & Remote Sensing, we aim to increase FRA coverage by <span className="text-2xl font-bold">3x</span> in the next 5 years
+              <h2 className="text-4xl font-bold text-forest-800 mb-4">How Vanmitra Processes FRA Claims</h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Our AI-powered platform digitizes and verifies Forest Rights Act claims through a streamlined, transparent process
               </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              {/* Step 1 */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</div>
+                  <h3 className="text-xl font-bold text-forest-800 ml-3">Document Upload & OCR</h3>
+                </div>
+                <Upload className="w-12 h-12 text-forest-600 mb-4" />
+                <p className="text-gray-700">
+                  Claimants or officials upload scanned FRA documents. Our advanced OCR technology extracts text from handwritten and printed documents in multiple languages.
+                </p>
+              </motion.div>
+
+              {/* Step 2 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-bold text-lg">2</div>
+                  <h3 className="text-xl font-bold text-forest-800 ml-3">AI Verification & Analysis</h3>
+                </div>
+                <Brain className="w-12 h-12 text-forest-600 mb-4" />
+                <p className="text-gray-700">
+                  Our AI models verify claim authenticity, detect duplicates, and analyze eligibility criteria against FRA guidelines. Machine learning ensures accurate classification.
+                </p>
+              </motion.div>
+
+              {/* Step 3 */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-bold text-lg">3</div>
+                  <h3 className="text-xl font-bold text-forest-800 ml-3">Satellite Mapping</h3>
+                </div>
+                <Satellite className="w-12 h-12 text-forest-600 mb-4" />
+                <p className="text-gray-700">
+                  Claimed land parcels are verified using satellite imagery. We detect forest cover, water bodies, and land use patterns to validate claims geospatially.
+                </p>
+              </motion.div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Step 4 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-bold text-lg">4</div>
+                  <h3 className="text-xl font-bold text-forest-800 ml-3">DSS Recommendations</h3>
+                </div>
+                <Target className="w-12 h-12 text-forest-600 mb-4" />
+                <p className="text-gray-700">
+                  Our Decision Support System analyzes socio-economic data to recommend eligible beneficiaries for government schemes like PM-KISAN, MGNREGA, and Jal Jeevan Mission.
+                </p>
+              </motion.div>
+
+              {/* Step 5 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-forest-600 text-white rounded-full flex items-center justify-center font-bold text-lg">5</div>
+                  <h3 className="text-xl font-bold text-forest-800 ml-3">Dashboard & Reports</h3>
+                </div>
+                <BarChart3 className="w-12 h-12 text-forest-600 mb-4" />
+                <p className="text-gray-700">
+                  Officials access real-time dashboards showing claim status, analytics, and geographic distribution. Automated reports help in policy decisions and resource allocation.
+                </p>
+              </motion.div>
+            </div>
+
+            {/* Key Features */}
+            <div className="mt-12 bg-white rounded-xl p-8 shadow-lg">
+              <h3 className="text-2xl font-bold text-forest-800 mb-6 text-center">Key Features of Our Platform</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-6 h-6 text-forest-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-forest-800">Multi-Language Support</h4>
+                    <p className="text-gray-600 text-sm">Process documents in Hindi, English, and 10+ regional languages</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-6 h-6 text-forest-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-forest-800">99.5% Accuracy</h4>
+                    <p className="text-gray-600 text-sm">AI-powered verification with minimal false positives</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-6 h-6 text-forest-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-forest-800">Real-time Processing</h4>
+                    <p className="text-gray-600 text-sm">Claims processed within 24-48 hours of submission</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-6 h-6 text-forest-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-forest-800">Secure & Compliant</h4>
+                    <p className="text-gray-600 text-sm">End-to-end encryption with government data protection standards</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

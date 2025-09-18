@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trees, Menu, X, Shield, LogOut, User as UserIcon, LayoutDashboard, Home as HomeIcon, Upload, FileText, BarChart3, Settings } from 'lucide-react'
+import { Trees, Menu, X, LogOut, User as UserIcon, Upload, FileText, BarChart3, ChevronDown } from 'lucide-react'
 import Cookies from 'js-cookie'
 import { toast } from 'react-toastify'
 import api from '../services/api'
+import { Playfair_Display } from 'next/font/google'
+
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['900'], style: ['normal', 'italic'] })
 
 export default function Navbar({ user, setUser }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const profileMenuRef = useRef(null)
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -19,6 +23,16 @@ export default function Navbar({ user, setUser }) {
     email: '',
     password: ''
   })
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -79,84 +93,84 @@ export default function Navbar({ user, setUser }) {
 
   return (
     <>
-      <header className="fixed top-0 w-full bg-white shadow-md z-50">
-        {/* Government Header */}
-        <div className="bg-forest-800 text-white py-1">
-          <div className="container mx-auto px-4 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span>भारत सरकार | Government of India</span>
-              <span className="hidden sm:inline">जनजातीय कार्य मंत्रालय | Ministry of Tribal Affairs</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/hi" className="hover:underline">हिंदी</Link>
-              <span>|</span>
-              <Link href="/en" className="hover:underline">English</Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Navigation */}
-        <nav className="bg-white border-b-2 border-forest-600">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
+      <header className="fixed top-0 w-full z-50">
+        <nav className="mx-8 mt-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-full shadow-lg px-6 py-2">
+            <div className="flex items-center justify-between h-14">
               {/* Logo Section */}
-              <Link href="/" className="flex items-center gap-4">
-                {/* Vanmitra Logo */}
-                <div className="flex items-center gap-3">
-                  <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-12 h-12" />
-                  <div className="flex flex-col">
-                    <h1 className="text-2xl font-bold text-forest-800">VANMITRA</h1>
-                    <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
-                  </div>
-                </div>
-              </Link>
+              <motion.div
+                className="flex items-center gap-4"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link href="/" className="flex items-center gap-3 group">
+                  <motion.div
+                    whileHover={{ rotate: 5 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-12 h-12 drop-shadow-sm" />
+                    <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  </motion.div>
+                  <span className={`${playfair.className} text-2xl font-bold text-forest-800 tracking-wide hidden sm:block`}>
+                    VANMITRA
+                  </span>
+                </Link>
+                <div className="h-8 w-px bg-gray-300"></div>
+                <img src="/images/Ministry_of_Tribal_Affairs (1).svg" alt="Ministry of Tribal Affairs" className="h-10" />
+              </motion.div>
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
-                <Link
-                  href="/"
-                  className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
-                >
-                  <HomeIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/fra-act"
-                  className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/fra-act') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
-                >
-                  <FileText className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                  <span>FRA Act</span>
-                </Link>
-                {user && (
-                  <>
+                {user && [
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
                     <Link
-                      href="/dashboard"
-                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
+                      href={item.href}
+                      className={`group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                        router.pathname === item.href
+                          ? 'bg-forest-600 text-white font-bold shadow-sm'
+                          : 'text-forest-700 font-semibold hover:bg-forest-50'
+                      }`}
                     >
-                      <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                      <span>Dashboard</span>
+                      {item.icon && <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />}
+                      <span className="relative text-base">
+                        {item.label}
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
+                      </span>
                     </Link>
-                    <Link
-                      href="/upload"
-                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/upload') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
-                    >
-                      <Upload className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                      <span>Upload</span>
-                    </Link>
-                  </>
-                )}
+                  </motion.div>
+                ))}
 
                 {/* User Menu */}
                 {user ? (
-                  <div className="relative ml-4">
+                  <motion.div
+                    className="relative ml-4"
+                    ref={profileMenuRef}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       className="group flex items-center gap-3 bg-gradient-to-r from-forest-100 to-forest-50 text-forest-800 px-4 py-2.5 rounded-xl hover:from-forest-200 hover:to-forest-100 transition-all duration-200 shadow-sm hover:shadow-md border border-forest-200"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm group-hover:scale-105 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-bold shadow-sm group-hover:scale-105 transition-transform duration-200">
                         {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
                       </div>
-                      <span className="font-medium text-sm">{user.name || 'Profile'}</span>
+                      <div className="text-left">
+                        <span className="font-bold text-base">{user.name || 'Profile'}</span>
+                        <p className="text-xs font-semibold text-forest-600">Welcome back</p>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                    </button>
 
                     {/* Dropdown Menu */}
                     <AnimatePresence>
@@ -204,24 +218,26 @@ export default function Navbar({ user, setUser }) {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <button
+                  <motion.button
                     onClick={() => setShowLoginModal(true)}
-                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group flex items-center gap-2 bg-forest-600 text-white px-6 py-2.5 rounded-full hover:bg-forest-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                    <span className="font-medium">Sign In</span>
-                  </button>
+                    <UserIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-bold text-base">Sign In</span>
+                  </motion.button>
                 )}
               </div>
 
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden"
+                className="md:hidden p-2 rounded-lg hover:bg-forest-50 transition-colors duration-200"
               >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMenuOpen ? <X className="w-6 h-6 text-forest-600" /> : <Menu className="w-6 h-6 text-forest-600" />}
               </button>
             </div>
           </div>
@@ -234,45 +250,33 @@ export default function Navbar({ user, setUser }) {
               initial={{ height: 0 }}
               animate={{ height: 'auto' }}
               exit={{ height: 0 }}
-              className="md:hidden bg-white border-b overflow-hidden"
+              className="md:hidden bg-white rounded-b-3xl shadow-lg overflow-hidden mx-8"
             >
-              <div className="container mx-auto px-4 py-6 space-y-1">
-                <Link
-                  href="/"
-                  className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <HomeIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/fra-act"
-                  className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/fra-act') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FileText className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                  <span>FRA Act</span>
-                </Link>
-                {user && (
-                  <>
+              <div className="px-4 py-6 space-y-1">
+                {user && [
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
                     <Link
-                      href="/dashboard"
-                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
+                      href={item.href}
+                      className={`group flex items-center gap-3 py-3 px-4 rounded-full transition-all duration-200 ${
+                        router.pathname === item.href
+                          ? 'bg-forest-600 text-white font-semibold'
+                          : 'text-forest-700 hover:bg-forest-50'
+                      }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <BarChart3 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                      <span>Dashboard</span>
+                      {item.icon && <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />}
+                      <span>{item.label}</span>
                     </Link>
-                    <Link
-                      href="/upload"
-                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/upload') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Upload className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                      <span>Upload</span>
-                    </Link>
-                  </>
-                )}
+                  </motion.div>
+                ))}
 
                 {user ? (
                   <div className="border-t border-forest-100 pt-4 mt-4">
@@ -311,6 +315,9 @@ export default function Navbar({ user, setUser }) {
           )}
         </AnimatePresence>
       </header>
+
+      {/* Spacer for fixed header */}
+      <div className="h-24"></div>
 
       {/* Login Modal */}
       <AnimatePresence>
