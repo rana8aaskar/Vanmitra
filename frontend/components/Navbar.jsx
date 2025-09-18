@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trees, Menu, X, LogOut, User as UserIcon, Upload, FileText, BarChart3, ChevronDown } from 'lucide-react'
 import Cookies from 'js-cookie'
-import { toast } from 'react-toastify'
+import { showToast } from './CustomToast'
 import api from '../services/api'
 import { Playfair_Display } from 'next/font/google'
 
@@ -49,7 +49,7 @@ export default function Navbar({ user, setUser }) {
       api.setAuthToken(response.token)
       setUser(response.user)
       setShowLoginModal(false)
-      toast.success('Logged in successfully!')
+      showToast.login('Welcome Back!', `Logged in as ${response.user?.name || response.user?.email}`)
       setFormData({ name: '', email: '', password: '' })
 
       // Redirect to dashboard after login
@@ -57,7 +57,7 @@ export default function Navbar({ user, setUser }) {
         router.push('/dashboard')
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed')
+      showToast.error('Login Failed', error.response?.data?.error || 'Please check your credentials')
     }
   }
 
@@ -69,7 +69,7 @@ export default function Navbar({ user, setUser }) {
       api.setAuthToken(response.token)
       setUser(response.user)
       setShowRegisterModal(false)
-      toast.success('Registered successfully!')
+      showToast.register('Welcome to Vanmitra!', 'Your account has been created successfully')
       setFormData({ name: '', email: '', password: '' })
 
       // Redirect to dashboard after registration
@@ -77,7 +77,7 @@ export default function Navbar({ user, setUser }) {
         router.push('/dashboard')
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Registration failed')
+      showToast.error('Registration Failed', error.response?.data?.error || 'Please try again')
     }
   }
 
@@ -85,7 +85,7 @@ export default function Navbar({ user, setUser }) {
     Cookies.remove('token')
     api.setAuthToken(null)
     setUser(null)
-    toast.success('Logged out successfully')
+    showToast.info('Goodbye!', 'You have been logged out successfully')
     router.push('/')
   }
 
@@ -96,13 +96,9 @@ export default function Navbar({ user, setUser }) {
       <header className="fixed top-0 w-full z-50">
         <nav className="mx-8 mt-4">
           <div className="bg-white/95 backdrop-blur-md rounded-full shadow-lg px-6 py-2">
-            <div className="flex items-center justify-between h-14">
-              {/* Logo Section */}
-              <motion.div
-                className="flex items-center gap-4"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
+            <div className="flex items-center justify-between h-14 relative">
+              {/* Left Section - Logo and Ministry */}
+              <div className="flex items-center gap-4">
                 <Link href="/" className="flex items-center gap-3 group">
                   <motion.div
                     whileHover={{ rotate: 5 }}
@@ -112,16 +108,24 @@ export default function Navbar({ user, setUser }) {
                     <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-12 h-12 drop-shadow-sm" />
                     <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   </motion.div>
-                  <span className={`${playfair.className} text-2xl font-bold text-forest-800 tracking-wide hidden sm:block`}>
-                    VANMITRA
-                  </span>
                 </Link>
                 <div className="h-8 w-px bg-gray-300"></div>
                 <img src="/images/Ministry_of_Tribal_Affairs (1).svg" alt="Ministry of Tribal Affairs" className="h-10" />
+              </div>
+
+              {/* Center Section - Vanmitra Title */}
+              <motion.div
+                className="absolute left-1/2 transform -translate-x-1/2"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <span className={`${playfair.className} text-2xl font-bold text-forest-800 tracking-wide`}>
+                  VANMITRA
+                </span>
               </motion.div>
 
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-2">
+              {/* Right Section - Navigation */}
+              <div className="hidden md:flex items-center gap-2 justify-end">
                 {user && [
                   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
                   { href: '/upload', label: 'Upload', icon: Upload }

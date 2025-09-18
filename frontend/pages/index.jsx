@@ -414,7 +414,7 @@ export default function Home() {
             {/* Quick Stats Bar - Over Image */}
             <div className="absolute -bottom-24 left-0 right-0">
               <div className="container mx-auto px-4">
-                <div className="bg-black/50 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <div className="rounded-2xl p-6 border border-white/20">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <p className="text-4xl font-bold text-white drop-shadow-lg">4</p>

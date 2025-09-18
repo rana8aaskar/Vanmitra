@@ -105,6 +105,14 @@ a {
   @apply !bg-blue-500;
 }
 
+.custom-toast-progress-login {
+  @apply !bg-gradient-to-r !from-purple-500 !to-pink-600;
+}
+
+.custom-toast-progress-register {
+  @apply !bg-gradient-to-r !from-teal-500 !to-cyan-600;
+}
+
 .Toastify__toast-container {
   @apply !w-auto !max-w-md;
 }
@@ -114,5 +122,19 @@ a {
 }
 
 .Toastify__progress-bar {
-  @apply !h-1;
+  @apply !h-0;
+}
+
+/* Toast progress animation */
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.toast-progress {
+  animation: toast-progress 4s linear;
 }

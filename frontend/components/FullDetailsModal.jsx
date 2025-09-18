@@ -15,7 +15,12 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
 
   useEffect(() => {
     if (claimData && isOpen) {
-      fetchDSSRecommendations()
+      // Check if DSS recommendations are already included in claimData
+      if (claimData.dssRecommendations) {
+        setDssRecommendations(claimData.dssRecommendations)
+      } else {
+        fetchDSSRecommendations()
+      }
     }
   }, [claimData, isOpen])
 

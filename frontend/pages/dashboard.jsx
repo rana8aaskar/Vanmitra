@@ -198,7 +198,7 @@ export default function Dashboard() {
       {/* Navbar Component */}
       <Navbar user={user} setUser={setUser} />
 
-      <main className="h-screen flex" style={{ paddingTop: '64px' }}>
+      <main className="flex pt-20" style={{ height: 'calc(100vh - 1rem)' }}>
         {/* Left Panel - Filters */}
         <motion.div
           initial={{ x: 0 }}
@@ -373,7 +373,7 @@ export default function Dashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute right-0 top-20 bottom-0 w-[480px] z-[60] p-4"
+              className="absolute right-0 top-0 bottom-0 w-[480px] z-[60] p-4"
             >
               <motion.div
                 initial={{ x: 500, opacity: 0 }}

@@ -217,7 +217,12 @@ export default function UploadPage() {
   }
 
   const handleViewDetails = (doc) => {
-    setSelectedClaim(doc.data || doc)
+    // Include DSS recommendations with the claim data
+    const claimWithDSS = {
+      ...(doc.data || doc),
+      dssRecommendations: doc.dssRecommendations
+    }
+    setSelectedClaim(claimWithDSS)
     setShowFullDetails(true)
   }
 
@@ -256,8 +261,15 @@ export default function UploadPage() {
       <Navbar user={user} setUser={setUser} />
 
       {/* Hero Section with MoTA Branding */}
-      <section className="bg-gradient-to-br from-forest-600 to-forest-800 pt-32 pb-16">
-        <div className="container mx-auto px-4">
+      <section className="relative pt-32 pb-16" style={{
+        backgroundImage: 'url("/images/hero-forest-valley.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}>
+        {/* Blur overlay */}
+        <div className="absolute inset-0 backdrop-blur-sm bg-forest-800/70"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -623,17 +635,14 @@ export default function UploadPage() {
       </main>
 
       {/* Full Details Modal */}
-      <AnimatePresence>
-        {showFullDetails && selectedClaim && (
-          <FullDetailsModal
-            claim={selectedClaim}
-            onClose={() => {
-              setShowFullDetails(false)
-              setSelectedClaim(null)
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <FullDetailsModal
+        isOpen={showFullDetails}
+        claimData={selectedClaim}
+        onClose={() => {
+          setShowFullDetails(false)
+          setSelectedClaim(null)
+        }}
+      />
 
     </div>
   )
