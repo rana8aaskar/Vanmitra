@@ -156,6 +156,17 @@ class ApiService {
     const response = await this.client.post(`/dss/generate/${claimId}`)
     return response.data
   }
+
+  // Generic methods for direct HTTP calls
+  async get(url, config = {}) {
+    const response = await this.client.get(url, config)
+    return response.data
+  }
+
+  async post(url, data = {}, config = {}) {
+    const response = await this.client.post(url, data, config)
+    return response.data
+  }
 }
 
 const api = new ApiService()

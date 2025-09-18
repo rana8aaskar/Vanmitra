@@ -9,8 +9,8 @@ import {
   Upload, CheckCircle, FileText, Shield, AlertCircle,
   Download, Eye, MapPin, Calendar, User, Award,
   ChevronRight, CloudUpload, Zap, Activity, TrendingUp,
-  Clock, Hash, Home, CreditCard, Loader2, Check,
-  FileCheck, Database, Cpu, Globe, BarChart, Menu, X, LogOut, ChevronDown
+  Clock, Hash, Home as HomeIcon, CreditCard, Loader2, Check,
+  FileCheck, Database, Cpu, Globe, BarChart3, Menu, X, LogOut, ChevronDown
 } from 'lucide-react'
 import { showToast } from '../components/CustomToast'
 import api from '../services/api'
@@ -57,9 +57,12 @@ export default function UploadPage() {
     if (token) {
       api.setAuthToken(token)
       fetchUser()
+      fetchStats()
+    } else {
+      // Redirect to home page with login modal if not authenticated
+      router.push('/')
+      showToast.warning('Please sign in to access the upload page')
     }
-    // Always fetch stats regardless of authentication
-    fetchStats()
   }, [])
 
   const fetchUser = async () => {
@@ -330,10 +333,9 @@ export default function UploadPage() {
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
-                  { href: '/dashboard', label: 'Dashboard', icon: BarChart }
+                  { href: '/', label: 'Home', icon: HomeIcon },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
                 ].map((item, index) => (
                   <motion.div
                     key={item.href}
@@ -399,7 +401,7 @@ export default function UploadPage() {
                               className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
                               onClick={() => setShowProfileMenu(false)}
                             >
-                              <BarChart className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                               <span>Dashboard</span>
                             </Link>
                             <Link
@@ -483,10 +485,9 @@ export default function UploadPage() {
                   </motion.div>
                 )}
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
-                  { href: '/dashboard', label: 'Dashboard', icon: BarChart }
+                  { href: '/', label: 'Home', icon: HomeIcon },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+                  { href: '/upload', label: 'Upload', icon: Upload }
                 ].map((item, index) => (
                   <motion.div
                     key={item.href}
@@ -745,7 +746,7 @@ export default function UploadPage() {
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Export CSV"
                         >
-                          <BarChart className="w-5 h-5 text-gray-600" />
+                          <FileText className="w-5 h-5 text-gray-600" />
                         </button>
                       </div>
                     </div>

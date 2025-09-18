@@ -3,6 +3,7 @@ const router = express.Router();
 const dssSyncService = require('../dss-sync-service');
 const DSSEngineService = require('../services/dssEngineService');
 const DSSRecommendationEngine = require('../services/dssRecommendationEngine');
+const DSSMLPredictionService = require('../services/dssMLPredictionService');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Get DSS recommendations for a specific claim or all claims
@@ -335,6 +336,36 @@ router.post('/expert-analysis-batch', authMiddleware, async (req, res) => {
   }
 });
 
+// Get ML-based predictions for a specific claim
+router.get('/ml-predictions/:claimId', authMiddleware, async (req, res) => {
+  try {
+    const { claimId } = req.params;
+
+    console.log(`🤖 Getting ML predictions for claim ${claimId}`);
+    const predictions = await DSSMLPredictionService.getPredictionsForClaim(parseInt(claimId));
+
+    if (!predictions) {
+      return res.status(404).json({
+        success: false,
+        message: 'Unable to generate predictions for this claim'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: predictions,
+      message: 'ML predictions generated successfully'
+    });
+  } catch (error) {
+    console.error('Error getting ML predictions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get ML predictions',
+      error: error.message
+    });
+  }
+});
+
 // DSS recommendation statistics
 router.get('/recommendation-stats', authMiddleware, async (req, res) => {
   try {
@@ -365,6 +396,37 @@ router.get('/recommendation-stats', authMiddleware, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get recommendation statistics',
+      error: error.message
+    });
+  }
+});
+
+// TEST ENDPOINT - ML predictions without auth (for testing only)
+router.get('/test-ml-predictions/:claimId', async (req, res) => {
+  try {
+    const { claimId } = req.params;
+
+    console.log(`🤖 TEST: Getting ML predictions for claim ${claimId}`);
+    const predictions = await DSSMLPredictionService.getPredictionsForClaim(parseInt(claimId));
+
+    if (!predictions) {
+      return res.status(404).json({
+        success: false,
+        message: 'Unable to generate predictions for this claim',
+        claimId: claimId
+      });
+    }
+
+    res.json({
+      success: true,
+      data: predictions,
+      message: 'ML predictions generated successfully (TEST ENDPOINT)'
+    });
+  } catch (error) {
+    console.error('Error in test ML predictions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get ML predictions',
       error: error.message
     });
   }
