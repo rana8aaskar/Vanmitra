@@ -1,11 +1,67 @@
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, User, MapPin, FileText, CreditCard, Calendar,
   Building2, Droplets, UserCheck, Globe, Download,
-  Printer, Share2, CheckCircle, Clock, XCircle
+  Printer, Share2, CheckCircle, Clock, XCircle, Loader2, TrendingUp
 } from 'lucide-react'
+import DSSRecommendations from './DSSRecommendations'
+import api from '../services/api'
 
 export default function FullDetailsModal({ isOpen, onClose, claimData }) {
+  const [loading, setLoading] = useState(false)
+  const [dssRecommendations, setDssRecommendations] = useState(null)
+  const [loadingDSS, setLoadingDSS] = useState(false)
+
+  useEffect(() => {
+    if (claimData && isOpen) {
+      fetchDSSRecommendations()
+    }
+  }, [claimData, isOpen])
+
+  const fetchDSSRecommendations = async () => {
+    if (!claimData || !claimData.id) return
+
+    setLoadingDSS(true)
+    try {
+      // Try ML prediction first
+      const mlResponse = await api.get(`/dss/ml-predictions/${claimData.id}`)
+
+      if (mlResponse.data && mlResponse.data.recommendedSchemes) {
+        console.log('ML predictions received:', mlResponse.data)
+        setDssRecommendations(mlResponse.data)
+      } else {
+        // Fallback to regular DSS recommendations
+        const response = await api.get('/dss/recommendations', {
+          params: {
+            claim_id: claimData.id,
+            state: claimData.state,
+            district: claimData.district,
+            village: claimData.village
+          }
+        })
+
+        if (response.data && response.data.length > 0) {
+          // Transform the old format to new format if needed
+          const recommendations = response.data[0]
+          const transformedData = {
+            recommendedSchemes: recommendations.recommended_schemes || [],
+            overallScore: recommendations.overall_priority,
+            totalSchemes: recommendations.recommended_schemes?.length || 0,
+            topPriority: recommendations.top_scheme,
+            village: claimData.village
+          }
+          setDssRecommendations(transformedData)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching DSS recommendations:', error)
+      // Don't show error to user, just silently fail
+    } finally {
+      setLoadingDSS(false)
+    }
+  }
+
   if (!claimData) return null
 
   const formatDate = (dateStr) => {
@@ -60,17 +116,18 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-forest-600 to-water-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-forest-600 to-forest-700 p-6 text-white">
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">Claim Details</h2>
                   <div className="flex items-center gap-4 text-sm">
-                    <span>ID: #{claimData.id || 'N/A'}</span>
-                    <span className={`px-3 py-1 rounded-full font-medium ${
-                      (claimData.status_of_claim || '').toLowerCase() === 'approved' ? 'bg-green-500' :
-                      (claimData.status_of_claim || '').toLowerCase() === 'pending' ? 'bg-yellow-500' :
-                      'bg-red-500'
+                    <span className="bg-white/20 px-3 py-1 rounded-lg">ID: #{claimData.id || 'N/A'}</span>
+                    <span className={`px-3 py-1 rounded-full font-medium flex items-center gap-2 ${
+                      (claimData.status_of_claim || '').toLowerCase() === 'approved' ? 'bg-green-500/80' :
+                      (claimData.status_of_claim || '').toLowerCase() === 'pending' ? 'bg-yellow-500/80' :
+                      'bg-red-500/80'
                     }`}>
+                      {getStatusIcon(claimData.status_of_claim)}
                       {claimData.status_of_claim || 'Unknown'}
                     </span>
                   </div>
@@ -89,8 +146,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Personal Information Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-forest-50 to-forest-100/50 rounded-xl p-5 border border-forest-200">
+                  <h3 className="text-lg font-semibold text-forest-800 mb-4 flex items-center gap-2">
                     <User className="w-5 h-5 text-forest-600" />
                     Personal Information
                   </h3>
@@ -123,9 +180,9 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                 </div>
 
                 {/* Location Information Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-water-600" />
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-blue-600" />
                     Location Information
                   </h3>
                   <dl className="space-y-3">
@@ -157,8 +214,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                 </div>
 
                 {/* Claim Information Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-5 border border-purple-200">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-purple-600" />
                     Claim Information
                   </h3>
@@ -191,8 +248,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                 </div>
 
                 {/* Status & Dates Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl p-5 border border-indigo-200">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-indigo-600" />
                     Status & Timeline
                   </h3>
@@ -224,8 +281,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                 </div>
 
                 {/* Infrastructure Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-5 border border-orange-200">
+                  <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2">
                     <Building2 className="w-5 h-5 text-orange-600" />
                     Infrastructure & Resources
                   </h3>
@@ -246,8 +303,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                 </div>
 
                 {/* Verification Section */}
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-xl p-5 border border-teal-200">
+                  <h3 className="text-lg font-semibold text-teal-800 mb-4 flex items-center gap-2">
                     <UserCheck className="w-5 h-5 text-teal-600" />
                     Verification & Authorities
                   </h3>
@@ -277,8 +334,8 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
 
                 {/* Boundary Description - Full Width */}
                 {claimData.boundary_description && (
-                  <div className="bg-gray-50 rounded-lg p-5 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-xl p-5 md:col-span-2 border border-cyan-200">
+                    <h3 className="text-lg font-semibold text-cyan-800 mb-4 flex items-center gap-2">
                       <Globe className="w-5 h-5 text-cyan-600" />
                       Boundary Description
                     </h3>
@@ -287,25 +344,64 @@ export default function FullDetailsModal({ isOpen, onClose, claimData }) {
                     </p>
                   </div>
                 )}
+
+                {/* DSS Recommendations Section - Full Width */}
+                <div className="md:col-span-2">
+                  {loadingDSS ? (
+                    <div className="bg-gradient-to-br from-forest-50 to-forest-100/50 rounded-xl p-8 border border-forest-200">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <Loader2 className="w-8 h-8 text-forest-600 animate-spin" />
+                        <div className="text-center">
+                          <p className="text-lg font-medium text-forest-800">Analyzing Claim Data</p>
+                          <p className="text-sm text-forest-600 mt-1">Please wait while we process scheme recommendations...</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : dssRecommendations ? (
+                    <div className="bg-gradient-to-br from-forest-50 to-forest-100/50 rounded-xl p-5 border border-forest-200">
+                      <h3 className="text-lg font-semibold text-forest-800 mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-forest-600" />
+                        DSS Engine - Scheme Recommendations
+                      </h3>
+                      <DSSRecommendations
+                        claimId={claimData.id}
+                        claimData={claimData}
+                        dssRecommendations={dssRecommendations}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-5 border border-gray-200">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">DSS recommendations not available</p>
+                        <button
+                          onClick={fetchDSSRecommendations}
+                          className="mt-2 text-sm text-forest-600 hover:text-forest-700 font-medium"
+                        >
+                          Retry Analysis
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="border-t border-gray-200 p-4 bg-gray-50">
+            <div className="border-t border-forest-200 p-4 bg-gradient-to-r from-forest-50 to-forest-100">
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 text-sm text-forest-700 bg-white border border-forest-300 rounded-lg hover:bg-forest-50 transition-colors flex items-center gap-2">
                     <Printer className="w-4 h-4" />
                     Print
                   </button>
-                  <button className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 text-sm text-forest-700 bg-white border border-forest-300 rounded-lg hover:bg-forest-50 transition-colors flex items-center gap-2">
                     <Share2 className="w-4 h-4" />
                     Share
                   </button>
                 </div>
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 text-sm text-white bg-gradient-to-r from-forest-600 to-water-600 rounded-lg hover:from-forest-700 hover:to-water-700 transition-all"
+                  className="px-6 py-2 text-sm text-white bg-gradient-to-r from-forest-600 to-forest-700 rounded-lg hover:from-forest-700 hover:to-forest-800 transition-all shadow-lg"
                 >
                   Close
                 </button>

@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { Trees, Droplets, Mountain, Building, Users, Globe, Award, ChevronRight, MapPin, Upload, BarChart3, Brain, Satellite, ScrollText, CheckCircle, ArrowRight, Menu, X, Shield, Target, TrendingUp, FileText, Activity, Layers, Navigation, Clock, User, LogOut, ChevronDown } from 'lucide-react'
+import { Trees, Users, Globe, Award, ChevronRight, MapPin, Upload, BarChart3, Brain, Satellite, ScrollText, CheckCircle, ArrowRight, Menu, X, Shield, Target, TrendingUp, FileText, Activity, Home as HomeIcon, Settings, FileSearch, Database, Clock, User, LogOut, ChevronDown, Mountain, Building } from 'lucide-react'
 import CountUp from 'react-countup'
 import { useInView } from 'react-intersection-observer'
 import Cookies from 'js-cookie'
@@ -382,14 +382,35 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/dashboard" className="bg-forest-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-forest-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Explore FRA Atlas
-              </Link>
-              <Link href="/upload" className="bg-earth-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-earth-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
-                <Upload className="w-5 h-5" />
-                Submit FRA Claim
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/dashboard" className="bg-forest-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-forest-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Go to Dashboard
+                  </Link>
+                  <Link href="/upload" className="bg-white/20 backdrop-blur text-white border-2 border-white/50 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                    <Upload className="w-5 h-5" />
+                    Submit FRA Claim
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="bg-forest-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-forest-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <User className="w-5 h-5" />
+                    Sign In to Continue
+                  </button>
+                  <button
+                    onClick={() => setShowRegisterModal(true)}
+                    className="bg-white/20 backdrop-blur text-white border-2 border-white/50 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    Create Account
+                  </button>
+                </>
+              )}
           </div>
 
             {/* Quick Stats Bar */}
@@ -530,74 +551,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Interactive FRA Atlas Preview */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-7xl mx-auto"
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-forest-800 mb-4">Interactive FRA Atlas</h2>
-              <p className="text-xl text-gray-600">Explore forest rights claims across India in real-time</p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              <div className="bg-forest-600 text-white p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <MapPin className="w-6 h-6" />
-                  <span className="font-semibold">WebGIS Portal - Live Data</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">Filter by:</span>
-                  <select className="bg-forest-700 px-3 py-1 rounded text-sm">
-                    <option>All States</option>
-                    <option>Maharashtra</option>
-                    <option>Odisha</option>
-                    <option>Chhattisgarh</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Map Preview */}
-              <div className="relative h-96 bg-gray-100">
-                <iframe
-                  src="/map-wrapper.html"
-                  className="w-full h-full"
-                  style={{ border: 'none' }}
-                />
-                <div className="absolute top-4 right-4">
-                  <Link href="/dashboard" className="bg-white text-forest-600 px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow inline-flex items-center gap-2 text-sm font-semibold">
-                    <Layers className="w-4 h-4" />
-                    Open Full Atlas
-                  </Link>
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-50 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Forest Cover</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm">Water Bodies</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm">Agricultural Land</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">Settlements</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Dynamic Impact Stats */}
       <section ref={statsRef} className="py-20 bg-gradient-to-br from-forest-600 to-forest-800 text-white">

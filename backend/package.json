@@ -7,13 +7,15 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "db:init": "node db/init-db.js",
-    "db:reset": "node db/init-db.js"
+    "db:reset": "node db/init-db.js",
+    "import-dss": "node import-dss-data.js"
   },
   "dependencies": {
     "axios": "^1.6.5",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "form-data": "^4.0.0",

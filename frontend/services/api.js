@@ -48,11 +48,16 @@ class ApiService {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await this.client.post('/upload', formData, {
+    const response = await this.client.post('/process', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
+    return response.data
+  }
+
+  async saveDocument(documentData) {
+    const response = await this.client.post('/save', documentData)
     return response.data
   }
 
@@ -107,6 +112,59 @@ class ApiService {
 
   async getClaimStatistics() {
     const response = await this.client.get('/claims/statistics')
+    return response.data
+  }
+
+  // DSS endpoints
+  async getDSSRecommendations(claimId) {
+    const response = await this.client.get(`/dss/recommendations/${claimId}`)
+    return response.data
+  }
+
+  async getDSSStatistics() {
+    const response = await this.client.get('/dss/statistics')
+    return response.data
+  }
+
+  async triggerDSSUpdate() {
+    const response = await this.client.post('/dss/update')
+    return response.data
+  }
+
+  async getTopPriorityVillages(scheme, limit = 10) {
+    const response = await this.client.get(`/dss/priority-villages/${scheme}?limit=${limit}`)
+    return response.data
+  }
+
+  // Expert DSS analysis endpoints
+  async getExpertAnalysis(claimId) {
+    const response = await this.client.get(`/dss/expert-analysis/${claimId}`)
+    return response.data
+  }
+
+  async getBatchExpertAnalysis(claimIds) {
+    const response = await this.client.post('/dss/expert-analysis-batch', { claimIds })
+    return response.data
+  }
+
+  async getDSSRecommendationStats() {
+    const response = await this.client.get('/dss/recommendation-stats')
+    return response.data
+  }
+
+  async generateDSSForClaim(claimId) {
+    const response = await this.client.post(`/dss/generate/${claimId}`)
+    return response.data
+  }
+
+  // Generic methods for direct HTTP calls
+  async get(url, config = {}) {
+    const response = await this.client.get(url, config)
+    return response.data
+  }
+
+  async post(url, data = {}, config = {}) {
+    const response = await this.client.post(url, data, config)
     return response.data
   }
 }

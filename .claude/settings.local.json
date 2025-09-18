@@ -14,7 +14,15 @@
       "Bash(node:*)",
       "Bash(python3:*)",
       "Bash(cat:*)",
-      "Read(//mnt/c/Users/harsh/OneDrive/Desktop/**)"
+      "Read(//mnt/c/Users/harsh/OneDrive/Desktop/**)",
+      "Bash(npm run import-dss:*)",
+      "Bash(pip3 install:*)",
+      "Bash(psql:*)",
+      "Bash(grep:*)",
+      "Bash(pip3 list:*)",
+      "Bash(xargs rm:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

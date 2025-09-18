@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trees, Menu, X, Shield, LogOut, User as UserIcon, LayoutDashboard, MapPin, Upload, FileText, BarChart3, Phone } from 'lucide-react'
+import { Trees, Menu, X, Shield, LogOut, User as UserIcon, LayoutDashboard, Home as HomeIcon, Upload, FileText, BarChart3, Settings } from 'lucide-react'
 import Cookies from 'js-cookie'
 import { toast } from 'react-toastify'
 import api from '../services/api'
@@ -112,82 +112,95 @@ export default function Navbar({ user, setUser }) {
               </Link>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-8">
+              <div className="hidden md:flex items-center gap-2">
                 <Link
                   href="/"
-                  className={`transition-colors ${isActive('/') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                  className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
                 >
-                  Home
+                  <HomeIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                  <span>Home</span>
                 </Link>
                 <Link
                   href="/fra-act"
-                  className={`transition-colors ${isActive('/fra-act') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
+                  className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/fra-act') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
                 >
-                  FRA Act
+                  <FileText className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                  <span>FRA Act</span>
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className={`transition-colors ${isActive('/dashboard') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
-                >
-                  FRA Atlas
-                </Link>
-                <Link
-                  href="/upload"
-                  className={`transition-colors ${isActive('/upload') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
-                >
-                  Upload
-                </Link>
-                <Link
-                  href="/impact"
-                  className={`transition-colors ${isActive('/impact') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
-                >
-                  Impact
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`transition-colors ${isActive('/contact') ? 'text-forest-800 font-semibold' : 'text-gray-700 hover:text-forest-600'}`}
-                >
-                  Contact
-                </Link>
+                {user && (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
+                    >
+                      <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                      <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/upload"
+                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive('/upload') ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'}`}
+                    >
+                      <Upload className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                      <span>Upload</span>
+                    </Link>
+                  </>
+                )}
 
                 {/* User Menu */}
                 {user ? (
-                  <div className="relative">
+                  <div className="relative ml-4">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center gap-2 bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors"
+                      className="group flex items-center gap-3 bg-gradient-to-r from-forest-100 to-forest-50 text-forest-800 px-4 py-2.5 rounded-xl hover:from-forest-200 hover:to-forest-100 transition-all duration-200 shadow-sm hover:shadow-md border border-forest-200"
                     >
-                      <UserIcon className="w-4 h-4" />
-                      <span>{user.name || 'User'}</span>
-                    </button>
+                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm group-hover:scale-105 transition-transform duration-200">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                      </div>
+                      <span className="font-medium text-sm">{user.name || 'Profile'}</span>
 
                     {/* Dropdown Menu */}
                     <AnimatePresence>
                       {showUserMenu && (
                         <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 backdrop-blur-sm"
                         >
-                          <Link
-                            href="/dashboard"
-                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            <LayoutDashboard className="w-4 h-4" />
-                            Dashboard
-                          </Link>
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false)
-                              handleLogout()
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700 w-full text-left"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            Logout
-                          </button>
+                          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-forest-50 to-forest-100">
+                            <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                            <p className="text-xs text-forest-600">{user.email}</p>
+                          </div>
+                          <div className="py-2">
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Dashboard</span>
+                            </Link>
+                            <Link
+                              href="/upload"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Upload className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Upload Document</span>
+                            </Link>
+                            <hr className="my-2 border-gray-100" />
+                            <button
+                              onClick={() => {
+                                setShowUserMenu(false)
+                                handleLogout()
+                              }}
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 w-full text-left group"
+                            >
+                              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Logout</span>
+                            </button>
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -195,9 +208,10 @@ export default function Navbar({ user, setUser }) {
                 ) : (
                   <button
                     onClick={() => setShowLoginModal(true)}
-                    className="bg-forest-600 text-white px-4 py-2 rounded-md hover:bg-forest-700 transition-colors"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    Login
+                    <UserIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Sign In</span>
                   </button>
                 )}
               </div>
@@ -222,80 +236,74 @@ export default function Navbar({ user, setUser }) {
               exit={{ height: 0 }}
               className="md:hidden bg-white border-b overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 space-y-2">
+              <div className="container mx-auto px-4 py-6 space-y-1">
                 <Link
                   href="/"
-                  className={`block py-2 ${isActive('/') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Home
+                  <HomeIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                  <span>Home</span>
                 </Link>
                 <Link
                   href="/fra-act"
-                  className={`block py-2 ${isActive('/fra-act') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
+                  className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/fra-act') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  FRA Act
+                  <FileText className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                  <span>FRA Act</span>
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className={`block py-2 ${isActive('/dashboard') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  FRA Atlas
-                </Link>
-                <Link
-                  href="/upload"
-                  className={`block py-2 ${isActive('/upload') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Upload
-                </Link>
-                <Link
-                  href="/impact"
-                  className={`block py-2 ${isActive('/impact') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Impact
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`block py-2 ${isActive('/contact') ? 'text-forest-800 font-semibold' : 'text-gray-700'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Contact
-                </Link>
+                {user && (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <BarChart3 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                      <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/upload"
+                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${isActive('/upload') ? 'bg-forest-100 text-forest-800 font-semibold' : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Upload className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                      <span>Upload</span>
+                    </Link>
+                  </>
+                )}
 
                 {user ? (
-                  <>
-                    <div className="border-t pt-2 mt-2">
-                      <Link
-                        href="/dashboard"
-                        className="block py-2 text-gray-700"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false)
-                          handleLogout()
-                        }}
-                        className="block py-2 text-gray-700 w-full text-left"
-                      >
-                        Logout
-                      </button>
+                  <div className="border-t border-forest-100 pt-4 mt-4">
+                    <div className="flex items-center gap-3 px-4 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="text-sm text-forest-600">{user.email}</p>
+                      </div>
                     </div>
-                  </>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        handleLogout()
+                      }}
+                      className="w-full text-left py-3 px-4 text-red-600 font-semibold hover:bg-red-50 rounded-lg transition-colors duration-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => {
                       setIsMenuOpen(false)
                       setShowLoginModal(true)
                     }}
-                    className="block py-2 text-forest-600 font-semibold w-full text-left"
+                    className="w-full text-left py-3 px-4 text-forest-600 font-semibold hover:bg-forest-50 rounded-lg transition-colors duration-200"
                   >
-                    Login
+                    Sign In
                   </button>
                 )}
               </div>

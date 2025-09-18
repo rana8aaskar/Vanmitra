@@ -36,5 +36,6 @@ pool.on('connect', () => {
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  getClient: () => pool.connect()
+  getClient: () => pool.connect(),
+  pool: pool
 };

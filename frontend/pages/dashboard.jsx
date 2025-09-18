@@ -5,12 +5,12 @@ import { useRouter } from 'next/router'
 import FullDetailsModal from '../components/FullDetailsModal'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  MapPin, Filter, ChevronRight, ChevronLeft, Trees, Droplets,
-  Mountain, Building, Layers, Info, ZoomIn, ZoomOut,
+  MapPin, Filter, ChevronRight, ChevronLeft, Trees, Droplets, Mountain, Building,
+  Layers, Info, ZoomIn, ZoomOut,
   Navigation, Calendar, Clock, CheckCircle, XCircle, AlertCircle,
-  User, FileText, Activity, Hash, Home, CreditCard, Users,
+  User, FileText, Activity, Hash, Home as HomeIcon, CreditCard, Users,
   Globe, Gavel, UserCheck, Building2, IndianRupee, Download, X,
-  Upload, BarChart, Menu, LogOut, ChevronDown
+  Upload, BarChart3, Menu, LogOut, ChevronDown, Settings
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 import api from '../services/api'
@@ -55,8 +55,9 @@ export default function Dashboard() {
       api.setAuthToken(token)
       fetchUser()
     } else {
-      setShowLoginModal(true)
-      setLoading(false)
+      // Redirect to home page if not authenticated
+      router.push('/')
+      toast.warning('Please sign in to access the dashboard')
     }
   }, [])
 
@@ -218,12 +219,22 @@ export default function Dashboard() {
   if (loading && !user) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Trees className="w-6 h-6 text-forest-600 animate-pulse" />
-            <Droplets className="w-6 h-6 text-water-600 animate-pulse" />
+        <div className="text-center bg-white rounded-2xl shadow-2xl p-12">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Trees className="w-10 h-10 text-forest-600 animate-bounce" />
+            <Droplets className="w-10 h-10 text-blue-600 animate-bounce" style={{ animationDelay: '0.1s' }} />
+            <Mountain className="w-10 h-10 text-earth-600 animate-bounce" style={{ animationDelay: '0.2s' }} />
           </div>
-          <p className="text-gray-600">Loading...</p>
+          <h2 className="text-2xl font-bold text-forest-800 mb-2">Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">Please wait while we fetch your FRA data...</p>
+          <div className="w-64 mx-auto bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="bg-gradient-to-r from-forest-500 to-forest-600 h-full rounded-full" style={{
+              animation: 'shimmer 2s ease-in-out infinite',
+              backgroundSize: '200% 100%',
+              backgroundImage: 'linear-gradient(90deg, #16a34a 0%, #22c55e 50%, #16a34a 100%)'
+            }}></div>
+          </div>
+          <p className="text-sm text-gray-500 mt-4">This may take a moment...</p>
         </div>
       </div>
     )
@@ -332,7 +343,7 @@ export default function Dashboard() {
                               className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
                               onClick={() => setShowProfileMenu(false)}
                             >
-                              <BarChart className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                               <span>Dashboard</span>
                             </Link>
                             <Link
