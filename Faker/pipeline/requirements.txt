@@ -9,6 +9,10 @@ numpy
 torch
 torchvision
 
+# For ML predictions (DSS)
+scikit-learn
+joblib
+
 # For NLP - install spacy separately
 # spacy
 # After installing, run: python -m spacy download en_core_web_sm

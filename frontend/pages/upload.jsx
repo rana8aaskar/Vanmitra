@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import Navbar from '../components/Navbar'
 import FullDetailsModal from '../components/FullDetailsModal'
+import DSSRecommendations from '../components/DSSRecommendations'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload, CheckCircle, FileText, Shield, AlertCircle,
@@ -111,54 +112,92 @@ export default function UploadPage() {
       // Start processing simulation
       const processingPromise = simulateProcessing()
 
-      // Upload the file
-      const result = await api.uploadDoc(file)
+      // Step 1: Process the document for preview
+      const processResult = await api.uploadDoc(file)
 
       // Wait for processing animation to complete
       await processingPromise
 
       // Extract data from the response
-      const extractedData = result.document || {}
+      const extractedData = processResult.extractedData || processResult.document || {}
 
       // Log for debugging
-      console.log('API Response:', result)
+      console.log('Process API Response:', processResult)
       console.log('Extracted Data:', extractedData)
+
+      // Step 2: Save the document to get claim ID and DSS recommendations
+      console.log('Saving document to database...')
+      const saveResult = await api.saveDocument(extractedData)
+
+      console.log('Save API Response:', saveResult)
+      console.log('DSS Recommendations:', saveResult.dssRecommendations)
 
       // Count actual extracted fields
       const extractedFieldsCount = Object.keys(extractedData).filter(key => extractedData[key] && extractedData[key] !== '').length
       const validatedFieldsCount = extractedFieldsCount - 2 // Approximate validated count
 
       const newDoc = {
-        id: result.document?.id || Date.now(),
+        id: saveResult.document?.id || Date.now(),
         name: file.name,
         size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
         type: file.type.split('/')[1].toUpperCase(),
         uploadDate: new Date().toISOString(),
         processingDate: new Date().toISOString(),
         status: extractedData.status_of_claim || 'processed',
-        confidence: result.processing?.success ? 95 : 85,
+        confidence: processResult.success ? 95 : 85,
         extractedFields: extractedFieldsCount,
         validatedFields: validatedFieldsCount,
-        data: extractedData
+        data: extractedData,
+        dssRecommendations: saveResult.dssRecommendations,
+        operation: saveResult.operation
       }
 
       setUploadedDocs(prev => [newDoc, ...prev])
 
-      showToast.success(
-        'Document Processed Successfully',
-        `${newDoc.extractedFields} fields extracted with ${newDoc.confidence}% confidence`
-      )
+      // Show different messages based on whether it's an update or new creation
+      if (saveResult.operation === 'update') {
+        const changedCount = saveResult.changedFields?.length || 0
+        const schemeCount = saveResult.dssRecommendations?.recommendedSchemes?.length ||
+                          saveResult.dssRecommendations?.totalSchemes || 0
+        showToast.success(
+          'Existing Claim Updated',
+          `Found existing claim ID ${saveResult.document?.id}. ${changedCount} field(s) updated. ${schemeCount} schemes recommended.`
+        )
+      } else if (saveResult.operation === 'no_change') {
+        const schemeCount = saveResult.dssRecommendations?.recommendedSchemes?.length ||
+                          saveResult.dssRecommendations?.totalSchemes || 0
+        showToast.info(
+          'Existing Claim Found',
+          `Claim ID ${saveResult.document?.id} already exists. No changes detected. ${schemeCount} schemes recommended.`
+        )
+      } else {
+        // New claim created
+        const schemeCount = saveResult.dssRecommendations?.recommendedSchemes?.length ||
+                          saveResult.dssRecommendations?.totalSchemes || 0
+        if (schemeCount > 0) {
+          showToast.success(
+            'New Claim Created',
+            `Claim ID ${saveResult.document?.id} created. ${schemeCount} government schemes recommended based on ML analysis!`
+          )
+        } else {
+          showToast.success(
+            'New Claim Created',
+            `Claim ID ${saveResult.document?.id} created with ${newDoc.confidence}% confidence.`
+          )
+        }
+      }
 
       // Refresh stats to get real data
       fetchStats()
 
-      if (!result.processing?.success) {
+      if (!processResult.success) {
         showToast.warning(
           'Processing Incomplete',
           'Document saved but some fields could not be extracted. Manual review required.'
         )
       }
     } catch (error) {
+      console.error('Upload error:', error)
       showToast.error(
         'Upload Failed',
         error.response?.data?.error || 'Unable to process document. Please try again.'
@@ -509,6 +548,33 @@ export default function UploadPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* DSS Recommendations */}
+                      {doc.dssRecommendations ? (
+                        <DSSRecommendations
+                          claimId={doc.id}
+                          claimData={doc.data}
+                          dssRecommendations={doc.dssRecommendations}
+                        />
+                      ) : (
+                        <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="w-4 h-4 text-yellow-600" />
+                            <h6 className="text-sm font-semibold text-yellow-900 uppercase tracking-wide">
+                              DSS Recommendations
+                            </h6>
+                          </div>
+                          <p className="text-sm text-yellow-700">
+                            DSS recommendations are being processed. Please check back in a few moments or contact an administrator.
+                          </p>
+                          <button
+                            onClick={() => window.location.reload()}
+                            className="mt-2 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1 rounded transition-colors"
+                          >
+                            Refresh to check for updates
+                          </button>
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className="flex gap-3 mt-6 pt-6 border-t">

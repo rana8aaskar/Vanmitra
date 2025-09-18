@@ -6,6 +6,7 @@ require('dotenv').config();
 const fraRoutes = require('./routes/fraRoutes');
 const userRoutes = require('./routes/userRoutes');
 const claimRoutes = require('./routes/claimRoutes');
+const dssRoutes = require('./routes/dssRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', fraRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/claims', claimRoutes);
+app.use('/api/dss', dssRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

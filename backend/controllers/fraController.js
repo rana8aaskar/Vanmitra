@@ -1,6 +1,11 @@
 const FRAModel = require('../models/fraModel');
 const ModelClient = require('../utils/modelClient');
 const PipelineProcessor = require('../utils/pipelineProcessor');
+const dssSyncService = require('../dss-sync-service');
+const DSSEngineService = require('../services/dssEngineService');
+const SimpleDSSService = require('../services/simpleDSSService');
+const DSSMLPredictionService = require('../services/dssMLPredictionService');
+const SimpleDSSPredictionService = require('../services/simpleDSSPredictionService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -29,11 +34,17 @@ class FRAController {
         });
       }
 
+      // For preview mode, we don't have a claim ID yet, so we can't get DSS recommendations
+      // DSS recommendations will be generated when the document is saved
+      let dssRecommendations = null;
+      console.log('📋 Document processed for preview - DSS recommendations will be available after saving');
+
       // Return extracted data for preview
       res.status(200).json({
         message: 'Document processed successfully',
         extractedData: pipelineResult.data,
         rawCsv: pipelineResult.rawCsv,
+        dssRecommendations: dssRecommendations,
         success: true,
         method: 'pipeline'
       });
@@ -56,12 +67,82 @@ class FRAController {
       documentData.user_id = userId;
       documentData.status = documentData.status || 'pending';
 
-      // Save to database
+      // Save to database (will either create new or update existing)
       const fraDocument = await FRAModel.createDocument(documentData);
 
-      res.status(201).json({
-        message: 'Document saved successfully',
-        document: fraDocument
+      // Determine the message based on operation
+      let message = 'Document saved successfully';
+      let statusCode = 201;
+
+      if (fraDocument.operation === 'update') {
+        message = `Existing claim updated successfully (ID: ${fraDocument.id}). ${fraDocument.changed_fields ? fraDocument.changed_fields.length : 0} fields modified.`;
+        statusCode = 200;
+        console.log(`✅ Updated existing claim ${fraDocument.id} with changes:`, fraDocument.changed_fields);
+      } else if (fraDocument.operation === 'no_change') {
+        message = `Existing claim found (ID: ${fraDocument.id}). No changes detected.`;
+        statusCode = 200;
+        console.log(`ℹ️ No changes for existing claim ${fraDocument.id}`);
+      } else {
+        message = `New claim created successfully (ID: ${fraDocument.id})`;
+        console.log(`✅ Created new claim ${fraDocument.id}`);
+      }
+
+      // Skip the Python-based DSS pipeline since we're using simplified predictions
+      // The SimpleDSSPredictionService works without Python
+      /*
+      if (fraDocument && fraDocument.id) {
+        console.log('🔄 Running DSS pipeline after document save...');
+        DSSEngineService.runFullPipeline()
+          .then(() => console.log('✅ DSS pipeline completed after document save'))
+          .catch(err => console.error('⚠️ DSS pipeline failed:', err));
+      }
+      */
+
+      // Generate DSS recommendations for the saved document using ML predictions
+      let dssRecommendations = null;
+      if (fraDocument.id) {
+        try {
+          console.log('🔄 Generating ML-based DSS predictions for claim ID:', fraDocument.id);
+
+          // Try to use ML prediction service first, fallback to simplified service
+          dssRecommendations = await DSSMLPredictionService.getPredictionsForClaim(fraDocument.id);
+
+          if (!dssRecommendations) {
+            console.log('⚠️ ML predictions failed, using simplified service...');
+            dssRecommendations = await SimpleDSSPredictionService.getPredictionsForClaim(fraDocument.id);
+          }
+
+          if (!dssRecommendations) {
+            // Fallback to existing recommendation services
+            console.log('⚠️ ML predictions unavailable, trying fallback services...');
+            dssRecommendations = await DSSEngineService.getRecommendationsForClaim(fraDocument.id);
+
+            if (!dssRecommendations) {
+              console.log('🔄 Generating simple DSS recommendations...');
+              dssRecommendations = await SimpleDSSService.generateRecommendationsForClaim(fraDocument.id);
+            }
+          }
+
+          console.log('DSS recommendations generated:', dssRecommendations ? 'Yes' : 'No');
+          if (dssRecommendations?.recommendedSchemes) {
+            console.log(`✅ Recommended ${dssRecommendations.recommendedSchemes.length} schemes for claim ${fraDocument.id}`);
+          }
+        } catch (dssError) {
+          console.error('Error getting DSS recommendations:', dssError);
+        }
+      }
+
+      // Clean up operation metadata before sending response
+      const documentResponse = { ...fraDocument };
+      delete documentResponse.operation;
+      delete documentResponse.changed_fields;
+
+      res.status(statusCode).json({
+        message: message,
+        document: documentResponse,
+        dssRecommendations: dssRecommendations,
+        operation: fraDocument.operation,
+        changedFields: fraDocument.changed_fields
       });
     } catch (error) {
       next(error);
