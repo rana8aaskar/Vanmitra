@@ -101,18 +101,13 @@ export default function Navbar({ user, setUser }) {
             <div className="flex items-center justify-between h-16">
               {/* Logo Section */}
               <Link href="/" className="flex items-center gap-4">
-                {/* Ashoka Emblem */}
-                <div className="w-12 h-12 bg-forest-700 rounded-full flex items-center justify-center">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
-
-                {/* Vanmitra Logo and Text */}
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <Trees className="w-8 h-8 text-forest-600" />
+                {/* Vanmitra Logo */}
+                <div className="flex items-center gap-3">
+                  <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-12 h-12" />
+                  <div className="flex flex-col">
                     <h1 className="text-2xl font-bold text-forest-800">VANMITRA</h1>
+                    <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
                   </div>
-                  <p className="text-xs text-gray-600">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
                 </div>
               </Link>
 

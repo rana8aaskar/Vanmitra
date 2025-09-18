@@ -155,6 +155,7 @@ npm start
 - `DELETE /api/fra-docs/:id` - Delete document (admin only)
 - `POST /api/fra-docs/:id/reprocess` - Reprocess document with AI
 
+
 ## AI Model Integration
 
 The system supports two modes for AI processing:
@@ -164,6 +165,14 @@ Configure `MODEL_ENDPOINT` in `.env` to point to your AI model API.
 
 ### Local Mode
 Set `MODEL_TYPE=LOCAL` and ensure the Python model is available at the specified path.
+
+### Model Tech
+The local AI pipeline leverages the following Python libraries:
+
+- **EasyOCR**: Used for Optical Character Recognition (OCR) to extract text from scanned images and PDF files.
+- **spaCy**: Used for advanced Natural Language Processing (NLP) tasks, such as entity extraction and text analysis from claim documents.
+
+These tools enable robust extraction and understanding of claim data from a variety of document formats.
 
 ## Deployment
 

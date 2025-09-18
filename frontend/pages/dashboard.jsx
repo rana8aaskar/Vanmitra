@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
-import Navbar from '../components/Navbar'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import FullDetailsModal from '../components/FullDetailsModal'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,7 +9,8 @@ import {
   Mountain, Building, Layers, Info, ZoomIn, ZoomOut,
   Navigation, Calendar, Clock, CheckCircle, XCircle, AlertCircle,
   User, FileText, Activity, Hash, Home, CreditCard, Users,
-  Globe, Gavel, UserCheck, Building2, IndianRupee, Download, X
+  Globe, Gavel, UserCheck, Building2, IndianRupee, Download, X,
+  Upload, BarChart, Menu, LogOut, ChevronDown
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 import api from '../services/api'
@@ -16,6 +18,7 @@ import Cookies from 'js-cookie'
 import { generateClaimReport, generateCSVReport } from '../utils/generateReport'
 
 export default function Dashboard() {
+  const router = useRouter()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedLocation, setSelectedLocation] = useState(null)
@@ -23,6 +26,16 @@ export default function Dashboard() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
   const [rightPanelOpen, setRightPanelOpen] = useState(false)
   const [showFullDetails, setShowFullDetails] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  })
+  const profileMenuRef = useRef(null)
   const mapFrameRef = useRef(null)
 
   // Filter states
@@ -34,14 +47,6 @@ export default function Dashboard() {
     approved: true,
     pending: true,
     rejected: false
-  })
-
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''
   })
 
   useEffect(() => {
@@ -120,6 +125,17 @@ export default function Dashboard() {
     }
   }
 
+  // Navbar functions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -155,6 +171,13 @@ export default function Dashboard() {
     } catch (error) {
       toast.error(error.response?.data?.error || 'Registration failed')
     }
+  }
+
+  const handleLogout = () => {
+    Cookies.remove('token')
+    setUser(null)
+    setShowProfileMenu(false)
+    toast.success('Logged out successfully')
   }
 
   const getStatusIcon = (status) => {
@@ -213,7 +236,243 @@ export default function Dashboard() {
         <meta name="description" content="Resource Management Dashboard" />
       </Head>
 
-      <Navbar user={user} setUser={setUser} />
+      {/* Enhanced Navbar - Same as Homepage */}
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 border-b border-forest-200">
+        <nav className="bg-white/95 backdrop-blur-md">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo Section */}
+              <motion.div 
+                className="flex items-center gap-4"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link href="/" className="flex items-center gap-3 group">
+                  <motion.div
+                    whileHover={{ rotate: 5 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-14 h-14 drop-shadow-sm" />
+                    <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  </motion.div>
+                  <div className="flex flex-col">
+                    <h1 className="text-2xl font-bold text-forest-800 group-hover:text-forest-600 transition-colors duration-200">VANMITRA</h1>
+                    <p className="text-xs text-gray-600 group-hover:text-forest-500 transition-colors duration-200">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-2">
+                {[
+                  { href: '/', label: 'Home', icon: null },
+                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
+                  { href: '/upload', label: 'Upload', icon: Upload },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Link 
+                      href={item.href} 
+                      className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                        router.pathname === item.href 
+                          ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' 
+                          : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'
+                      }`}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />}
+                      <span className="relative">
+                        {item.label}
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
+                      </span>
+                    </Link>
+                  </motion.div>
+                ))}
+                
+                {user ? (
+                  <motion.div 
+                    className="relative ml-4"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <button
+                      onClick={() => setShowProfileMenu(!showProfileMenu)}
+                      className="group flex items-center gap-3 bg-gradient-to-r from-forest-100 to-forest-50 text-forest-800 px-4 py-2.5 rounded-xl hover:from-forest-200 hover:to-forest-100 transition-all duration-200 shadow-sm hover:shadow-md border border-forest-200"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm group-hover:scale-105 transition-transform duration-200">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                      </div>
+                      <div className="text-left">
+                        <span className="font-medium text-sm">{user.name || 'Profile'}</span>
+                        <p className="text-xs text-forest-600">Welcome back</p>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Profile Dropdown */}
+                    <AnimatePresence>
+                      {showProfileMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 backdrop-blur-sm"
+                        >
+                          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-forest-50 to-forest-100">
+                            <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                            <p className="text-xs text-forest-600">{user.email}</p>
+                          </div>
+                          <div className="py-2">
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <BarChart className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Dashboard</span>
+                            </Link>
+                            <Link
+                              href="/upload"
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-gray-700 hover:bg-forest-50 hover:text-forest-700 transition-all duration-200 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <Upload className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Upload Document</span>
+                            </Link>
+                            <hr className="my-2 border-gray-100" />
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center gap-3 px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 w-full text-left group"
+                            >
+                              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                              <span>Logout</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    onClick={() => setShowLoginModal(true)}
+                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <User className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Sign In</span>
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Mobile menu button */}
+              <motion.button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-forest-50 transition-colors duration-200"
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  animate={{ rotate: isMenuOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isMenuOpen ? <X className="w-6 h-6 text-forest-600" /> : <Menu className="w-6 h-6 text-forest-600" />}
+                </motion.div>
+              </motion.button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden bg-white/95 backdrop-blur-md border-b border-forest-200 overflow-hidden"
+            >
+              <div className="container mx-auto px-4 py-6 space-y-1">
+                {user && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="border-b border-forest-100 pb-4 mb-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-forest-600 to-forest-700 text-white rounded-full flex items-center justify-center font-semibold shadow-sm">
+                        {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="text-sm text-forest-600">{user.email}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                {[
+                  { href: '/', label: 'Home', icon: null },
+                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
+                  { href: '/upload', label: 'Upload', icon: Upload },
+                  { href: '/dashboard', label: 'Dashboard', icon: BarChart }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
+                    <Link 
+                      href={item.href}
+                      className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
+                        router.pathname === item.href 
+                          ? 'bg-forest-100 text-forest-800 font-semibold' 
+                          : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon && <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />}
+                      <span>{item.label}</span>
+                    </Link>
+                  </motion.div>
+                ))}
+                {user ? (
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={handleLogout}
+                    className="w-full text-left py-3 px-4 text-red-600 font-semibold hover:bg-red-50 rounded-lg transition-colors duration-200"
+                  >
+                    Logout
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      setShowLoginModal(true)
+                    }}
+                    className="w-full text-left py-3 px-4 text-forest-600 font-semibold hover:bg-forest-50 rounded-lg transition-colors duration-200"
+                  >
+                    Sign In
+                  </motion.button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
 
       <main className="pt-16 h-screen flex">
         {/* Left Panel - Filters */}
@@ -636,7 +895,7 @@ export default function Dashboard() {
                               </div>
                             )}
                           </div>
-                        </div>
+            </div>
                       )}
 
                       {/* Verification Details */}
@@ -653,29 +912,29 @@ export default function Dashboard() {
                                 <span className={`font-medium ${
                                   selectedLocation.verified_by_gram_sabha === 'Yes' ? 'text-green-600' : 'text-red-600'
                                 }`}>{selectedLocation.verified_by_gram_sabha}</span>
-                              </div>
+            </div>
                             )}
                             {selectedLocation.gram_sabha_chairperson && (
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Gram Sabha Chair:</span>
                                 <span className="font-medium">{selectedLocation.gram_sabha_chairperson}</span>
-                              </div>
+            </div>
                             )}
                             {selectedLocation.forest_dept_officer && (
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Forest Officer:</span>
                                 <span className="font-medium">{selectedLocation.forest_dept_officer}</span>
-                              </div>
+            </div>
                             )}
                             {selectedLocation.revenue_dept_officer && (
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Revenue Officer:</span>
                                 <span className="font-medium">{selectedLocation.revenue_dept_officer}</span>
-                              </div>
+            </div>
                             )}
-                          </div>
-                        </div>
-                      )}
+            </div>
+          </div>
+        )}
 
                       {/* Boundary Description */}
                       {selectedLocation.boundary_description && (
@@ -766,7 +1025,7 @@ export default function Dashboard() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
+            <input
                     type="email"
                     name="email"
                     value={formData.email}
@@ -778,7 +1037,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <input
+            <input
                     type="password"
                     name="password"
                     value={formData.password}
@@ -796,14 +1055,14 @@ export default function Dashboard() {
                   >
                     Go to Home
                   </button>
-                  <button
-                    type="submit"
+            <button
+              type="submit"
                     className="flex-1 px-4 py-2 text-sm text-white bg-water-600 rounded-lg hover:bg-water-700 transition-colors"
-                  >
+            >
                     Sign In
-                  </button>
+            </button>
                 </div>
-              </form>
+          </form>
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-500">
                   Don't have an account?{' '}
@@ -817,7 +1076,7 @@ export default function Dashboard() {
                     Sign up here
                   </button>
                 </p>
-              </div>
+        </div>
             </motion.div>
           </motion.div>
         )}
@@ -857,7 +1116,7 @@ export default function Dashboard() {
                     placeholder="John Doe"
                     required
                   />
-                </div>
+            </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
@@ -869,7 +1128,7 @@ export default function Dashboard() {
                     placeholder="you@example.com"
                     required
                   />
-                </div>
+            </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                   <input
@@ -911,7 +1170,7 @@ export default function Dashboard() {
                     Sign in here
                   </button>
                 </p>
-              </div>
+            </div>
             </motion.div>
           </motion.div>
         )}
