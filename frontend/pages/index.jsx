@@ -9,6 +9,9 @@ import { useInView } from 'react-intersection-observer'
 import Cookies from 'js-cookie'
 import api from '../services/api'
 import { toast } from 'react-toastify'
+import { Cinzel } from 'next/font/google'
+
+const cinzel = Cinzel({ subsets: ['latin'], weight: ['900'] })
 
 export default function Home() {
   const router = useRouter()
@@ -112,8 +115,8 @@ export default function Home() {
       </Head>
 
       {/* Header with MoTA Branding */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 border-b border-forest-200">
-        <nav className="bg-white/95 backdrop-blur-md">
+      <header className="fixed top-0 w-full bg-transparent backdrop-blur-0 shadow-none z-50 border-none">
+        <nav className="bg-transparent backdrop-blur-0">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               {/* Logo Section */}
@@ -131,19 +134,13 @@ export default function Home() {
                     <img src="/images/vanmitra-logo.svg" alt="Vanmitra Logo" className="w-14 h-14 drop-shadow-sm" />
                     <div className="absolute inset-0 bg-forest-100 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   </motion.div>
-                  <div className="flex flex-col">
-                    <h1 className="text-2xl font-bold text-forest-800 group-hover:text-forest-600 transition-colors duration-200">VANMITRA</h1>
-                    <p className="text-xs text-gray-600 group-hover:text-forest-500 transition-colors duration-200">An Initiative by Ministry of Tribal Affairs, Govt. of India</p>
-                  </div>
+                  
                 </Link>
               </motion.div>
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
                   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
                 ].map((item, index) => (
                   <motion.div
@@ -156,14 +153,14 @@ export default function Home() {
                       href={item.href} 
                       className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                         router.pathname === item.href 
-                          ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' 
-                          : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'
+                          ? 'bg-white/20 text-white font-semibold shadow-sm' 
+                          : 'text-white hover:bg-white/10'
                       }`}
                     >
                       {item.icon && <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />}
                       <span className="relative">
                         {item.label}
-                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-200"></span>
                       </span>
                     </Link>
                   </motion.div>
@@ -235,7 +232,7 @@ export default function Home() {
                 ) : (
                   <motion.button
                     onClick={() => setShowLoginModal(true)}
-                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group flex items-center gap-2 bg-white text-forest-700 px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -270,7 +267,7 @@ export default function Home() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden bg-white/95 backdrop-blur-md border-b border-forest-200 overflow-hidden"
+              className="md:hidden bg-transparent backdrop-blur-0 border-b-0 overflow-hidden"
             >
               <div className="container mx-auto px-4 py-6 space-y-1">
                 {user && (
@@ -292,9 +289,6 @@ export default function Home() {
                   </motion.div>
                 )}
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
                   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 }
                 ].map((item, index) => (
                   <motion.div
@@ -307,8 +301,8 @@ export default function Home() {
                       href={item.href}
                       className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
                         router.pathname === item.href 
-                          ? 'bg-forest-100 text-forest-800 font-semibold' 
-                          : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'
+                          ? 'bg-white/20 text-white font-semibold' 
+                          : 'text-white hover:bg-white/10'
                       }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -362,6 +356,16 @@ export default function Home() {
 
 
         <div className="container mx-auto px-4 relative z-10 pt-24">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6 flex justify-center"
+          >
+              <span className={`${cinzel.className} text-5xl md:text-8xl font-extrabold tracking-widest text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.45)]`}>
+                VANMITRA
+              </span>
+            </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -497,7 +501,7 @@ export default function Home() {
                     Learn More <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
+          </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-earth-50 rounded-xl p-6 text-center">

@@ -237,8 +237,8 @@ export default function Dashboard() {
       </Head>
 
       {/* Enhanced Navbar - Same as Homepage */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-50 border-b border-forest-200">
-        <nav className="bg-white/95 backdrop-blur-md">
+      <header className="fixed top-0 w-full bg-transparent backdrop-blur-0 shadow-none z-50 border-none">
+        <nav className="bg-transparent backdrop-blur-0">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               {/* Logo Section */}
@@ -266,9 +266,6 @@ export default function Dashboard() {
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
                   { href: '/dashboard', label: 'Dashboard', icon: BarChart }
                 ].map((item, index) => (
                   <motion.div
@@ -281,14 +278,14 @@ export default function Dashboard() {
                       href={item.href} 
                       className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                         router.pathname === item.href 
-                          ? 'bg-forest-100 text-forest-800 font-semibold shadow-sm' 
-                          : 'text-gray-700 hover:text-forest-600 hover:bg-forest-50'
+                          ? 'bg-white/20 text-white font-semibold shadow-sm' 
+                          : 'text-white hover:bg-white/10'
                       }`}
                     >
                       {item.icon && <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />}
                       <span className="relative">
                         {item.label}
-                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-forest-600 group-hover:w-full transition-all duration-200"></span>
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-200"></span>
                       </span>
                     </Link>
                   </motion.div>
@@ -362,7 +359,7 @@ export default function Dashboard() {
                 ) : (
                   <motion.button
                     onClick={() => setShowLoginModal(true)}
-                    className="group flex items-center gap-2 bg-gradient-to-r from-forest-600 to-forest-700 text-white px-6 py-2.5 rounded-xl hover:from-forest-700 hover:to-forest-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group flex items-center gap-2 bg-white text-forest-700 px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -397,7 +394,7 @@ export default function Dashboard() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden bg-white/95 backdrop-blur-md border-b border-forest-200 overflow-hidden"
+              className="md:hidden bg-transparent backdrop-blur-0 border-b-0 overflow-hidden"
             >
               <div className="container mx-auto px-4 py-6 space-y-1">
                 {user && (
@@ -419,9 +416,6 @@ export default function Dashboard() {
                   </motion.div>
                 )}
                 {[
-                  { href: '/', label: 'Home', icon: null },
-                  { href: '/dashboard', label: 'FRA Atlas', icon: MapPin },
-                  { href: '/upload', label: 'Upload', icon: Upload },
                   { href: '/dashboard', label: 'Dashboard', icon: BarChart }
                 ].map((item, index) => (
                   <motion.div
@@ -434,8 +428,8 @@ export default function Dashboard() {
                       href={item.href}
                       className={`group flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
                         router.pathname === item.href 
-                          ? 'bg-forest-100 text-forest-800 font-semibold' 
-                          : 'text-gray-700 hover:bg-forest-50 hover:text-forest-600'
+                          ? 'bg-white/20 text-white font-semibold' 
+                          : 'text-white hover:bg-white/10'
                       }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
