@@ -4,6 +4,11 @@ from sklearn.preprocessing import MinMaxScaler
 from shapely.geometry import Point
 import warnings
 from sqlalchemy import create_engine
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Ignore nuisance warnings for a cleaner output
 warnings.filterwarnings('ignore', 'Geometry is in a geographic CRS')
@@ -12,8 +17,11 @@ print("--- Starting the Complete DSS Engine (Hybrid Mode: DB + Local Files) ---"
 
 try:
     # --- STEP 1: LOAD CLAIMANT DATA FROM DATABASE ---
-    # !!! IMPORTANT: Replace with your actual database credentials !!!
-    db_connection_str = 'postgresql://neondb_owner:npg_ZavzEIqCGM74@ep-calm-bird-ad99tbj1-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require'
+    # Get database URL from environment variable
+    db_connection_str = os.getenv('DATABASE_URL')
+    if not db_connection_str:
+        raise ValueError("DATABASE_URL environment variable is not set")
+
     db_engine = create_engine(db_connection_str)
     print("✅ 1. Connecting to the database...")
 
